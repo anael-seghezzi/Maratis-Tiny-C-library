@@ -158,7 +158,7 @@ M_API float m_2d_polyline_length(float2 *points, int count);
 /* 3d */
 M_API int m_3d_box_to_box_collision(float3 *min1, float3 *max1, float3 *min2, float3 *max2);
 M_API int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direction, float3 *box_min, float3 *box_max, float *in, float *out);
-M_API int m_tri_box_overlap(float3 *box_center, float3 *box_half_size, float3 *vert1, float3 *vert2, float3 *vert3);
+M_API int m_3d_tri_box_overlap(float3 *box_center, float3 *box_half_size, float3 *vert1, float3 *vert2, float3 *vert3);
 M_API float m_3d_polyline_length(float3 *points, int count);
 M_API float m_3d_ray_plane_intersection(float3 *ray_origin, float3 *ray_direction, float3 *plane_origin, float3 *plane_normal);
 M_API float m_3d_ray_sphere_intersection(float3 *ray_origin, float3 *ray_direction, float3 *sphere_origin, float sphere_radius2);

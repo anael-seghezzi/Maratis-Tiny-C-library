@@ -503,7 +503,7 @@ int _plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
 	rad = fa * boxhalfsize->x + fb * boxhalfsize->y;\
 	if(min>rad || max<-rad) return 0;
 
-int m_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *vert1, float3 *vert2, float3 *vert3)
+int m_3d_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *vert1, float3 *vert2, float3 *vert3)
 {
 	/*    use separating axis theorem to test overlap between triangle and box */
 	/*    need to test for overlap in these directions: */
