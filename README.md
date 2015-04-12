@@ -1,14 +1,7 @@
 Maratis Tiny C library
 ======================
 
-Maratis Tiny C library is a collection of small and efficient math
-and image processing routines written in C.
-
-Some of the code should be compatible with both standard C, OpenCL
-and CUDA, though GPGPU compatibility is still in progress.
-
-In other cases, the code is dependent on memory allocation (malloc/free)
-and multithreading is handled by OpenMP.
+Maratis Tiny C library is a collection of small and efficient math and image processing routines written in C. Some of the code should be compatible with both standard C, OpenCL and CUDA, though GPGPU compatibility is still in progress. In other cases, the code is dependent on memory allocation (malloc/free) and multithreading is handled by OpenMP.
 
 * free and open-source
 * no dependencies
