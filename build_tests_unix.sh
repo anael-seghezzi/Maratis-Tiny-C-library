@@ -13,8 +13,4 @@ make install
 
 echo ""
 echo "done"
-
-# run
-cd $install_path
-cd MTCL
-./RaytracingTest
+read x
