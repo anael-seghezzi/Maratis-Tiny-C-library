@@ -46,22 +46,25 @@ Image (CPU only)
 Building the tests (CMake)
 --------------------------
 
-Unix:
+**Unix:**
 
-run "build_tests_unix.sh"
+run:
+
+    build_tests_unix.sh
+    
 or type:
 
-  mkdir Build
-  cd Build
-  cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=../bin
-  make
-  make install
+    mkdir Build
+    cd Build
+    cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=../bin
+    make
+    make install
 
-Windows:
+**Windows:**
 
-  mkdir Build
-  cd Build
-  cmake -G "Visual Studio 10" ../
+    mkdir Build
+    cd Build
+    cmake -G "Visual Studio 10" ../
 
 License (zlib)
 --------------
