@@ -12,6 +12,13 @@ FILE(GLOB SOURCES
   src/window.c
 )
 
+IF(WIN32)
+  FILE(GLOB OS_HEADERS src/win32_*.h src/wgl_*.h)
+  FILE(GLOB OS_SOURCES src/win32_*.c src/wgl_*.c)
+  ADD_DEFINITIONS(-D_GLFW_WIN32)
+  ADD_DEFINITIONS(-D_GLFW_WGL)
+ENDIF(WIN32)
+
 IF(APPLE)
   FILE(GLOB OS_HEADERS src/cocoa_*.h src/nsgl_*.h)
   FILE(GLOB OS_SOURCES src/cocoa_*.c src/nsgl_*.c src/cocoa_*.m src/nsgl_*.m)

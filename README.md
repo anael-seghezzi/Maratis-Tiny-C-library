@@ -57,7 +57,15 @@ or type:
 
     mkdir Build
     cd Build
-    cmake -G "Visual Studio 10" ../
+    cmake -G "Visual Studio 11" ../ -DCMAKE_INSTALL_PREFIX=../bin
+
+or:
+
+    mkdir Build
+    cd Build
+    cmake -G "MinGW Makefiles" ../ -DCMAKE_INSTALL_PREFIX=../bin
+    make
+    make install
 
 License (zlib)
 --------------
