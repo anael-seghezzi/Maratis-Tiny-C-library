@@ -30,20 +30,10 @@
 
 /* macros */
 #ifndef __OPENCL_VERSION__
-	#ifdef WIN32
-		#if defined(M_DLL)
-		#define M_API __declspec(dllexport)
-		#elif defined(M_STATIC)
-		#define M_API
-		#else
-		#define M_API __declspec(dllimport)
-		#endif
-	#else
-		#define M_API
-	#endif
-	#define M_SAFE_FREE(p) { if (p) {free(p); (p) = NULL;} }
+	#define M_API
+	#define M_SAFE_FREE(p) {if (p) {free(p); (p) = NULL;}}
 #else
-#define M_API
+	#define M_API
 #endif
 
 /* types */
@@ -57,6 +47,7 @@ enum M_TYPES
 	M_USHORT,
 	M_INT,
 	M_UINT,
+	M_HALF,
 	M_FLOAT,
 	M_DOUBLE
 };

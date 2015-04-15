@@ -31,6 +31,7 @@
 #include <assert.h>
 
 #include <m_image.h>
+#include "m_half.c"
 
 
 void m_image_create(struct m_image *image, char type, int width, int height, int comp)
@@ -51,6 +52,7 @@ void m_image_create(struct m_image *image, char type, int width, int height, int
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		image->data = malloc(size * sizeof(short));
 		break;
 	case M_INT:
@@ -89,6 +91,7 @@ void m_image_copy(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		memcpy(dest->data, src->data, dest->size*sizeof(short));
 		break;
 	case M_INT:
@@ -138,6 +141,7 @@ void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		COPY_SUBI(short);
 		break;
 	case M_INT:
@@ -183,6 +187,20 @@ void m_image_ushort_to_float(struct m_image *dest, const struct m_image *src)
 		dest_data[i] = (float)src_data[i] * ushort_div;
 }
 
+void m_image_half_to_float(struct m_image *dest, const struct m_image *src)
+{
+	uint16_t *src_data;
+	float *dest_data;
+	int i;
+
+	m_image_create(dest, M_FLOAT, src->width, src->height, src->comp);
+
+	src_data = (uint16_t *)src->data;
+	dest_data = (float *)dest->data;
+	for(i=0; i<src->size; i++)
+		dest_data[i] = m_half2float(src_data[i]);
+}
+
 void m_image_float_to_ubyte(struct m_image *dest, const struct m_image *src)
 {
 	float *src_data;
@@ -213,6 +231,20 @@ void m_image_float_to_ushort(struct m_image *dest, const struct m_image *src)
 		int x = (int)(src_data[i] * 65535);
 		dest_data[i] = (unsigned short)M_CLAMP(x, 0, 65535);
 	}
+}
+
+void m_image_float_to_half(struct m_image *dest, const struct m_image *src)
+{
+	float *src_data;
+	uint16_t *dest_data;
+	int i;
+
+	m_image_create(dest, M_USHORT, src->width, src->height, src->comp);
+
+	src_data = (float *)src->data;
+	dest_data = (uint16_t *)dest->data;
+	for(i=0; i<src->size; i++)
+		dest_data[i] = m_float2half(src_data[i]);
 }
 
 void m_image_extract_component(struct m_image *dest, const struct m_image *src, int c)
@@ -249,6 +281,7 @@ void m_image_extract_component(struct m_image *dest, const struct m_image *src, 
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		EXTRACT(short);
 		break;
 	case M_INT:
@@ -309,6 +342,7 @@ void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, 
 				break;
 			case M_SHORT:
 			case M_USHORT:
+			case M_HALF:
 				REFRAME(short);
 				break;
 			case M_INT:
@@ -362,6 +396,7 @@ void m_image_rotate_left(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		ROTATE_L(short);
 		break;
 	case M_INT:
@@ -407,6 +442,7 @@ void m_image_rotate_right(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		ROTATE_R(short);
 		break;
 	case M_INT:
@@ -452,6 +488,7 @@ void m_image_rotate_180(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		ROTATE_180(short);
 		break;
 	case M_INT:
@@ -497,6 +534,7 @@ void m_image_mirror_x(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		MIRROR_X(short);
 		break;
 	case M_INT:
@@ -542,6 +580,7 @@ void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
 		break;
 	case M_SHORT:
 	case M_USHORT:
+	case M_HALF:
 		MIRROR_Y(short);
 		break;
 	case M_INT:

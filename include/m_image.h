@@ -67,8 +67,10 @@ M_API void m_image_destroy(struct m_image *image);
 
 M_API void m_image_ubyte_to_float(struct m_image *dest, const struct m_image *src);
 M_API void m_image_ushort_to_float(struct m_image *dest, const struct m_image *src);
+M_API void m_image_half_to_float(struct m_image *dest, const struct m_image *src);
 M_API void m_image_float_to_ubyte(struct m_image *dest, const struct m_image *src);
 M_API void m_image_float_to_ushort(struct m_image *dest, const struct m_image *src);
+M_API void m_image_float_to_half(struct m_image *dest, const struct m_image *src);
 
 M_API void m_image_copy(struct m_image *dest, const struct m_image *src);
 M_API void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int x, int y, int w, int h);
