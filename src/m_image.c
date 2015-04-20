@@ -114,7 +114,7 @@ void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int
 		T *sData = (T *)src->data + (M_MINy * src->width + M_MINx) * comp;\
 		T *dData = (T *)dest->data;\
 		int y;\
-		for(y = M_MINy; y <= M_MAXy; y++) {\
+		for (y = M_MINy; y <= M_MAXy; y++) {\
 			memcpy(dData, sData, dstep * sizeof(T));\
 			dData += dstep;\
 			sData += sstep;\
@@ -253,7 +253,7 @@ void m_image_extract_component(struct m_image *dest, const struct m_image *src, 
 	{\
 		T *dest_pixel = (T *)dest->data;\
 		T *src_pixel = (T *)src->data;\
-		for(i = 0; i < size; i += comp) {\
+		for (i = 0; i < size; i += comp) {\
 			(*dest_pixel) = src_pixel[c];\
 			dest_pixel++;\
 			src_pixel += comp;\
@@ -309,11 +309,11 @@ void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, 
 		m_image_create(dest, src->type, width2, height2, comp);\
 		src_data = (T *)src->data;\
 		dest_pixel = (T *)dest->data;\
-		for(y = 0; y < height2; y++) {\
+		for (y = 0; y < height2; y++) {\
 			T *src_y;\
 			int ys = y - top;\
 			src_y = src_data + M_CLAMP(ys, 0, hm1) * width * comp;\
-			for(x = 0; x < width2; x++) {\
+			for (x = 0; x < width2; x++) {\
 				int xs = x - left;\
 				src_pixel = src_y + M_CLAMP(xs, 0, wm1) * comp;\
 				for (c = 0; c < comp; c++)\

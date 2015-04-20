@@ -29,7 +29,34 @@
 
 #include "../test.h"
 #include <m_math.h>
+#include <m_image_filter.h>
 
+#define USE_NOISE /* comment to disable 3d noise (simple sphere raytracing) */
+
+/* approximative noise */
+static struct m_image rand_image = M_IMAGE_IDENTITY();
+static struct m_image tmp = M_IMAGE_IDENTITY();
+
+void init_noise(void)
+{
+	int i;
+	m_image_create(&rand_image, M_FLOAT, 16, 16, 2);
+	for (i = 0; i < rand_image.size; i++)
+		((float *)rand_image.data)[i] = (float)rand() / (float)RAND_MAX;
+}
+
+void destroy_noise(void)
+{
+	m_image_destroy(&rand_image);
+}
+
+float fast_noise(float x, float y, float z)
+{
+	float values[2];
+	float i = z - floorf(z);
+	m_image_sub_pixel(&rand_image, x + z + 8, y + z + 8, values);
+	return values[0] * (1.0f - i) + values[1] * i;
+}
 
 #define GET_RAY(ray, px, py, pz, hw, hh, ratio)\
 {\
@@ -52,19 +79,23 @@ static void draw(void)
 	float z_near = 1e-4;
 	float ambient = 0.15f;
 	float sphere_radius2;
+	float sphere_tex_unit;
 	float hw = w * 0.5f;
 	float hh = h * 0.5f;
 	float ratio = (float)test_height / (float)test_width;
 	
+	/* light */
 	light_dir.x = 0.5f;
 	light_dir.y = 0.25f;
 	light_dir.z = -0.5f;
 	
+	/* sphere */
 	sphere_radius2 = 100;
 	sphere_pos.x = cosf(test_t * 0.025f) * 20.0f;
 	sphere_pos.y = 0.0f;
 	sphere_pos.z = 50.0f + (sinf(test_t * 0.025f) + 1.0f) * 50.0f;
-	
+	sphere_tex_unit = 0.25f;
+
 	/* clear */
 	memset(test_buffer.data, 0, test_buffer.size * sizeof(float));
 	
@@ -78,31 +109,92 @@ static void draw(void)
 		for (x = 0; x < w; x++) {
 			
 			float3 origin = {0, 0, 0};
-			float3 ray;
-			float dist, Z = 1e20;
+			float3 ray, march_dir;
+			float march_step;
+			float idist, dist = 0, Z = 1e20;
 			
 			/* get ray from pixel position */
 			GET_RAY(ray, x, y, 1.35f, hw, hh, ratio);
+
+			march_step = 0.25f;
+			march_dir.x = ray.x * march_step;
+			march_dir.y = ray.y * march_step;
+			march_dir.z = ray.z * march_step;
 			
 			/* sphere */
-			dist = m_3d_ray_sphere_intersection(&origin, &ray, &sphere_pos, sphere_radius2);
+			m_3d_ray_sphere_intersection_in_out(&origin, &ray, &sphere_pos, sphere_radius2, &dist, &idist);
 			if (dist > z_near) {
 				
 				if (dist < Z) {
 					
 					float3 rd = {ray.x * dist, ray.y * dist, ray.z * dist};
 					float3 pos = {origin.x + rd.x, origin.y + rd.y, origin.z + rd.z};
-					float3 normal = {pos.x - sphere_pos.x, pos.y - sphere_pos.y, pos.z - sphere_pos.z};
-					float diffuse;
 					
-					M_NORMALIZE3(normal, normal);
-					diffuse = M_DOT3(normal, light_dir);
-					diffuse = M_MAX(0, diffuse);
+					/* simple sphere */
+					#ifndef USE_NOISE
+					{
+						float3 normal;
+						float diffuse;
+						M_SUB3(normal, pos, sphere_pos);
+						M_NORMALIZE3(normal, normal);
+						diffuse = M_DOT3(normal, light_dir);
+						diffuse = M_MAX(0, diffuse);
+						pixel[0] = ambient + diffuse;
+						pixel[1] = ambient + diffuse;
+						pixel[2] = ambient + diffuse;
+						Z = dist;
+					}
+					/* volumetric ray marching inside a sphere (perlin noise test) */
+					#else
+					{
+						float3 march = pos; /* starting at sphere intersection */
+						int i;
 
-					Z = dist;
-					pixel[0] = ambient + diffuse;
-					pixel[1] = ambient + diffuse;
-					pixel[2] = ambient + diffuse;
+						for (i = 0; i < 256; i++) {
+
+							float3 vcoord = {
+								(march.x - sphere_pos.x) * sphere_tex_unit,
+								(march.y - sphere_pos.y) * sphere_tex_unit,
+								(march.z - sphere_pos.z) * sphere_tex_unit
+							};
+	
+							float perlin = fast_noise(vcoord.x, vcoord.y, vcoord.z);
+							if (perlin > 0.6f) {
+
+								/* render */
+								float3 normal;
+								float diffuse;
+
+								if (i == 0) {
+									/* sphere normal */
+									M_SUB3(normal, pos, sphere_pos);
+									M_NORMALIZE3(normal, normal);
+								} else {
+									/* volume normal */
+									normal.x = perlin - fast_noise(vcoord.x + 0.0001f, vcoord.y, vcoord.z);
+									normal.y = perlin - fast_noise(vcoord.x, vcoord.y + 0.0001f, vcoord.z);
+									normal.z = perlin - fast_noise(vcoord.x, vcoord.y, vcoord.z + 0.0001f);
+									M_NORMALIZE3(normal, normal);
+								}
+
+								diffuse = M_DOT3(normal, light_dir);
+								diffuse = M_MAX(0, diffuse);
+								pixel[0] = ambient + diffuse;
+								pixel[1] = ambient + diffuse;
+								pixel[2] = ambient + diffuse;
+								Z = dist;
+								break;
+							}
+
+							/* march */
+							M_ADD3(march, march, march_dir);
+							dist += march_step;
+
+							if (dist > idist) /* out of the sphere */
+								break;
+						}
+					}
+					#endif
 				}
 			}
 			
@@ -116,12 +208,15 @@ int main(int argc, char **argv)
 	if (! test_create("M - RaytracingTest", 320, 180))
 		return EXIT_FAILURE;
 	
+	init_noise();
+
 	while (test_state) {
 		draw();
 		test_update();
 		thrd_yield();
 	}
 	
+	destroy_noise();
 	test_destroy();
 	return EXIT_SUCCESS;
 }

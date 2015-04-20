@@ -320,6 +320,22 @@ int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direction, 
 	return 0;
 }
 
+int m_3d_ray_sphere_intersection_in_out(float3 *ray_origin, float3 *ray_direction, float3 *sphere_origin, float sphere_radius2, float *in, float *out)
+{
+	float3 vec;
+	float b, det;
+
+	M_SUB3(vec, *sphere_origin, *ray_origin);
+	b = M_DOT3(vec, *ray_direction);
+	det = b * b - M_DOT3(vec, vec) + sphere_radius2;
+
+	if (det < 0) return 0;
+	else det = sqrtf(det);
+	*in = b - det;
+	*out = b + det;
+	return 1;
+}
+
 float m_3d_ray_plane_intersection(float3 *ray_origin, float3 *ray_direction, float3 *plane_origin, float3 *plane_normal)
 {
 	float constant = -M_DOT3(*plane_normal, *plane_origin);

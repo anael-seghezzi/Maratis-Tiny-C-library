@@ -151,7 +151,7 @@ void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int 
 	assert(src->size > 0 && src->type == M_FLOAT);
 
 	/* exit */
-	if (! (dx > 0 && dy > 0)) {
+	if (dx == 0 && dy == 0) {
 		m_image_copy(dest, src);
 		return;
 	}
