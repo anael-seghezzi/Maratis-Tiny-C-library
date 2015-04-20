@@ -35,6 +35,7 @@ Image (CPU only)
 * resizing (pyrdown, resize)
 * morphology operations (floodfill, dilate, erode, thinning...)
 * corner detection (harris, non-maxima suppression)
+* distance and voronoi functions
 
 Building the tests (CMake)
 --------------------------
