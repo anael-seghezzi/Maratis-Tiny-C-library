@@ -32,7 +32,12 @@
 
 
 #define WRITE_PIXEL(dest, w, h, x, y, v) {*(dest + w * y + x) = v;}
-#define PUSH_PIXEL(x2, y2) if((stack_i+3) < stack_size && _test_pixel(data, w, h, x2, y2, ref)) {stack_i+=2; stack[stack_i] = x2; stack[stack_i+1] = y2; WRITE_PIXEL(data, w, h, x2, y2, value);}
+#define PUSH_PIXEL(x2, y2) if((stack_i+3) < stack_size && _test_pixel(data, w, h, x2, y2, ref)) {\
+	stack_i+=2;\
+	stack[stack_i] = (unsigned short)x2;\
+	stack[stack_i+1] = (unsigned short)y2;\
+	WRITE_PIXEL(data, w, h, x2, y2, value);\
+}
 
 static int _test_pixel(unsigned char *src, int w, int h, int x, int y, unsigned char ref)
 {
@@ -53,8 +58,8 @@ int m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char ref, 
 	if(! _test_pixel(data, w, h, x, y, ref))
 		return 0;
 
-	stack[0] = x;
-	stack[1] = y;
+	stack[0] = (unsigned short)x;
+	stack[1] = (unsigned short)y;
 	WRITE_PIXEL(data, w, h, x, y, value);
 
 	while (stack_i >= 0) {
@@ -84,8 +89,8 @@ int m_image_floodfill_8x(struct m_image *dest, int x, int y, unsigned char ref, 
 	if(! _test_pixel(data, w, h, x, y, ref))
 		return 0;
 
-	stack[0] = x;
-	stack[1] = y;
+	stack[0] = (unsigned short)x;
+	stack[1] = (unsigned short)y;
 	WRITE_PIXEL(data, w, h, x, y, value);
 
 	while (stack_i >= 0) {
@@ -259,8 +264,10 @@ void m_image_thin(struct m_image *dest)
 			
 			/* Build initial previous scan buffer */
 			p = ip[0][0] != 0;
-			for (x=0; x<xsize-1; x++)
-				qb[x] = p = ((p<<1)&0006) | (ip[0][x+1] != 0);
+			for (x=0; x<xsize-1; x++) {
+				p = ((p<<1)&0006) | (ip[0][x+1] != 0);
+				qb[x] = (unsigned char)p;
+			}
 			
 			/* Scan image for pixel deletion candidates */
 			for (y=0; y<ysize-1; y++) {
@@ -270,7 +277,7 @@ void m_image_thin(struct m_image *dest)
 				for (x=0; x<xsize-1; x++) {
 					q = qb[x];
 					p = ((p<<1)&0666) | ((q<<3)&0110) | (ip[y+1][x+1] != 0);
-					qb[x] = p;
+					qb[x] = (unsigned char)p;
 
 					if (((p&m) == 0) && deleteMap[p]) {
 						if (ip[y][x] != 0) {

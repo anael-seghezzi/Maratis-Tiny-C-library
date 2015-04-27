@@ -67,9 +67,7 @@ void m_image_convolution_h(struct m_image *dest, const struct m_image *src, floa
         for (x = 0; x < width; x++) {
 
 			float *src_pixel;
-            int x0 = x - radius;
-            int x1 = x + radius;
-			int xx, i, k;
+			int i, k;
 
 			src_pixel = src_pixel_y + (x * comp);
 
@@ -120,9 +118,7 @@ void m_image_convolution_v(struct m_image *dest, const struct m_image *src, floa
         for (x = 0; x < width; x++) {
 
 			float *src_pixel;
-            int x0 = x - radius;
-            int x1 = x + radius;
-			int xx, i, k;
+			int i, k;
 
 			src_pixel = src_data + (y * width + x) * comp;
 
@@ -181,7 +177,7 @@ void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int 
 	M_SAFE_FREE(kernelx);
 }
 
-static float _convolve_pixel(float *data, int width, int x, int y, float *kernel)
+static float _convolve_pixel(float *data, int width, float *kernel)
 {
 	float sum = 0; int i, j;
 	for(i = 0; i < 3; i++) {
@@ -218,8 +214,8 @@ void m_image_sobel(struct m_image *dest, const struct m_image *src)
 
 	for(y = 0; y < height; y++) {
 		for(x = 0; x < width; x++) {
-			dest_pixel[0] = _convolve_pixel(src_pixel, w2, x, y, kx);
-			dest_pixel[1] = _convolve_pixel(src_pixel, w2, x, y, ky);
+			dest_pixel[0] = _convolve_pixel(src_pixel, w2, kx);
+			dest_pixel[1] = _convolve_pixel(src_pixel, w2, ky);
 			src_pixel++;
 			dest_pixel += 2;
 		}

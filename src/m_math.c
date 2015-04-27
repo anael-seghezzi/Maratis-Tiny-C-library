@@ -125,14 +125,14 @@ void m_gaussian_kernel(float *dest, int size)
 		float sigma = 1.6f;
 		float rs, s2;
 		int radius = (size - 1) / 2;
-		int i, r;
+		int r;
 		
 		s2 = 1.0f / expf(sigma * sigma * 2.25f);
 		rs = sigma / (float)radius;
 
 		/* compute gaussian kernel */
 		for(r = -radius; r <= radius; r++) {
-			float x = fabs((float)r * rs);
+			float x = fabsf(r * rs);
 			float v = (1.0f / expf(x * x)) - s2;
 			*k = v;
 			k++;
@@ -164,7 +164,7 @@ void m_harris_response(float *dest, float *src, int count)
 		float dx2 = src[0];
 		float dy2 = src[1];
 		float dxy = src[2];
-		*dest = (dx2*dy2 - dxy*dxy) / (dx2 + dy2 + 1e-8f);
+		*dest = (dx2 * dy2 - dxy * dxy) / (dx2 + dy2 + 1e-8f);
 		src += 3;
 		dest++;
 	}
@@ -177,7 +177,7 @@ void m_tfm(float *dest, float *src, int count)
 		float dx2 = src[0];
 		float dy2 = src[1];
 		float dxy = src[2];
-		float lambda = 0.5 * (dy2 + dx2 + sqrtf(dy2*dy2 - 2.0*dx2*dy2 + dx2*dx2 + 4.0*dxy*dxy));
+		float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
 		dest[0] = dx2 - lambda;
 		dest[1] = dxy;
 		src += 3;

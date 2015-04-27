@@ -30,7 +30,7 @@
 #include "../test.h"
 #include <m_math.h>
 #include <m_dist.h>
-
+#include <m_image_filter.h>
 
 #define POINT_COUNT 64
 #define RANDF ((float)rand() / (float)RAND_MAX)

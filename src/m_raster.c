@@ -117,8 +117,8 @@ void m_raster_triangle_att4(struct m_image *dest, float4 *v0, float4 *v1, float4
 		return;
 
 	/* bounding box */
-	FINDMINMAX(v0->x, v1->x, v2->x, minx, maxx);
-	FINDMINMAX(v0->y, v1->y, v2->y, miny, maxy);
+	FINDMINMAX((int)v0->x, (int)v1->x, (int)v2->x, minx, maxx);
+	FINDMINMAX((int)v0->y, (int)v1->y, (int)v2->y, miny, maxy);
 	minx = M_MAX(minx, 0);
 	miny = M_MAX(miny, 0);
 	maxx = M_MIN(maxx, w - 1);

@@ -29,22 +29,22 @@
 #define _M_DIST_H_
 
 #include <m_image.h>
-#define M_DIST_MAX 1e20
+#define M_DIST_MAX 1e20f
 
 /* raw distance functions
    dest: squared distance */
-void m_dist_transform_1d(float *dest, float *src, int count);
-void m_dist_transform_2d(float *dest, float *src, int width, int height);
+M_API void m_dist_transform_1d(float *dest, float *src, int count);
+M_API void m_dist_transform_2d(float *dest, float *src, int width, int height);
 
 /* raw voronoi distance functions
    destd: squared distance, desti: closest src coordinate (offset of *src) */
-void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count);
-void m_voronoi_transform_2d(float *destd, int *desti, float *src, int width, int height);
+M_API void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count);
+M_API void m_voronoi_transform_2d(float *destd, int *desti, float *src, int width, int height);
 
 /* image distance transform */
-void m_image_dist_mask_init(struct m_image *dest, const struct m_image *src); /* initialize a valid distance map from a ubyte mask */
-void m_image_dist_transform(struct m_image *dest, const struct m_image *src);
-void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, const struct m_image *src);
-void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src, const struct m_image *srci);
+M_API void m_image_dist_mask_init(struct m_image *dest, const struct m_image *src); /* initialize a valid distance map from a ubyte mask */
+M_API void m_image_dist_transform(struct m_image *dest, const struct m_image *src);
+M_API void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, const struct m_image *src);
+M_API void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src, const struct m_image *srci);
 
 #endif

@@ -88,8 +88,6 @@ static void _bilinear(struct m_image *dest, const struct m_image *src, float dx,
 void m_image_resize(struct m_image *dest, const struct m_image *src, int new_width, int new_height)
 {
 	struct m_image tmp = M_IMAGE_IDENTITY();
-	float *src_data;
-	float *dest_pixel;
 	int width = src->width;
 	int height = src->height;
 	int comp = src->comp;
