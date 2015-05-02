@@ -68,6 +68,15 @@ or:
     make
     make install
 
+**Emscripten:**
+
+    ./emcc -s LEGACY_GL_EMULATION=1 -s USE_GLFW=3
+
+Asm.js demos
+------------
+
+* [m_voronoi] (http://maratis3d.org/js/m_voronoi/m_voronoi.html)
+
 License (zlib)
 --------------
 
@@ -92,8 +101,8 @@ Copyright (c) 2015 Anael Seghezzi <www.maratis3d.com>
  3. This notice may not be removed or altered from any source
     distribution.
 
-Other projects that might interest you
---------------------------------------
+You may also like
+-----------------
 
 * [stb](https://github.com/nothings/stb)
 * [PAL](https://github.com/parallella/pal)
