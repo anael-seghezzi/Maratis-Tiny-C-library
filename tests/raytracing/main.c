@@ -90,10 +90,10 @@ static void draw(void)
 	light_dir.z = -0.5f;
 	
 	/* sphere */
-	sphere_radius2 = 100;
+	sphere_radius2 = 150;
 	sphere_pos.x = cosf(test_t * 0.025f) * 20.0f;
 	sphere_pos.y = 0.0f;
-	sphere_pos.z = 50.0f + (sinf(test_t * 0.025f) + 1.0f) * 50.0f;
+	sphere_pos.z = 50.0f + (sinf(test_t * 0.025f) + 1.0f) * 70.0f;
 	sphere_tex_unit = 0.25f;
 
 	/* clear */
@@ -203,18 +203,27 @@ static void draw(void)
 	}
 }
 
+void main_loop(void)
+{	
+	draw();
+	test_update();
+}
+
 int main(int argc, char **argv)
 {	
-	if (! test_create("M - RaytracingTest", 320, 180))
+	if (! test_create("M - RaytracingTest", 256, 256))
 		return EXIT_FAILURE;
 	
 	init_noise();
 
+	#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(main_loop, 0, 1);
+	#else
 	while (test_state) {
-		draw();
-		test_update();
+		main_loop();
 		thrd_yield();
 	}
+	#endif
 	
 	destroy_noise();
 	test_destroy();
