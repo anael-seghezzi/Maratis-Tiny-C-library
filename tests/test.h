@@ -29,10 +29,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <memory.h>
-#include <tinycthread.h>
 #include <GLFW/glfw3.h>
 #include <m_image.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#else
+#include <tinycthread.h>
+#endif
 
 GLFWwindow *test_glfw_window = NULL;
 static int test_state = 1;
@@ -62,7 +66,9 @@ static void draw_texture(GLuint texture)
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	
 	glTexCoordPointer(2, GL_FLOAT, 0, vertices);
 	glVertexPointer(2, GL_FLOAT, 0, vertices);
 	
@@ -72,13 +78,17 @@ static void draw_texture(GLuint texture)
 
 static void updateGL(void)
 {
+	glClearColor(0.1f, 0.2f, 0.3f, 0.0f);
+ 	glClear(GL_COLOR_BUFFER_BIT);
+	
 	glViewport(0, 0, test_width, test_height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, 1, 1, 0, 1, -1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
+
+	glColor4f(1, 1, 1, 1);
 	draw_texture(test_texture);
 }
 

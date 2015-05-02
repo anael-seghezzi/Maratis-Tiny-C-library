@@ -42,9 +42,9 @@ struct test_point
 	float3 col;
 };
 
-struct test_point points[POINT_COUNT];
-struct m_image tmp_buffer = M_IMAGE_IDENTITY();
-struct m_image tmpi = M_IMAGE_IDENTITY();
+static struct test_point points[POINT_COUNT];
+static struct m_image tmp_buffer = M_IMAGE_IDENTITY();
+static struct m_image tmpi = M_IMAGE_IDENTITY();
 
 
 static void init(void)
@@ -130,19 +130,28 @@ static void draw(void)
 	m_image_voronoi_fill(&test_buffer, &test_buffer, &tmpi);
 }
 
+void main_loop(void)
+{	
+	draw();
+	test_update();
+}
+
 int main(int argc, char **argv)
 {	
-	if (! test_create("M - VoronoiTest", 320, 180))
+	if (! test_create("M - VoronoiTest", 256, 256))
 		return EXIT_FAILURE;
 
 	init();
 
+	#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(main_loop, 0, 1);
+	#else
 	while (test_state) {
-		draw();
-		test_update();
+		main_loop();
 		thrd_yield();
 	}
-	
+	#endif
+
 	clear();
 	test_destroy();
 	return EXIT_SUCCESS;
