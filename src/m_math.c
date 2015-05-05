@@ -174,12 +174,24 @@ void m_tfm(float *dest, float *src, int count)
 {
 	int i;
 	for (i = 0; i < count; i++) {
-		float dx2 = src[0];
-		float dy2 = src[1];
-		float dxy = src[2];
-		float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
-		dest[0] = dx2 - lambda;
-		dest[1] = dxy;
+
+		if (src[0] < src[1]) {
+			float dx2 = src[0];
+			float dy2 = src[1];
+			float dxy = src[2];
+			float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
+			dest[0] = dx2 - lambda;
+			dest[1] = dxy;
+		}
+		else {
+			float dy2 = src[0];
+			float dx2 = src[1];
+			float dxy = src[2];
+			float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
+			dest[0] = dxy;
+			dest[1] = dx2 - lambda;
+		}
+
 		src += 3;
 		dest += 2;
 	}
