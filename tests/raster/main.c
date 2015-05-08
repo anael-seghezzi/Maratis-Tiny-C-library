@@ -32,49 +32,85 @@
 #include <m_image_filter.h>
 
 
-static struct m_image tmp_buffer = M_IMAGE_IDENTITY();
-static void draw(void)
+float3 vertices[8] = {
+	{-1, -1, -1},
+	{ 1, -1, -1},
+	{ 1,  1, -1},
+	{-1,  1, -1},
+	{-1, -1,  1},
+	{ 1, -1,  1},
+	{ 1,  1,  1},
+	{-1,  1,  1}
+};
+
+void draw(void)
 {
+	float2 pr[8];
+	float3 pos;
 	float color[3] = {1, 1, 1};
-	float2 p0, p1;
 	float *data;
 	int i;
 	
-	p0.x = sinf(test_t * 0.01f) * 64 + 128;
-	p0.y = 10;
-	p1.x = cosf(test_t * 0.025f) * 64 + 128;
-	p1.y = 118;
+	/* move */
+	pos.x = sinf(test_t * 0.025f);
+	pos.y = sinf(test_t * 0.02f) * 0.25f;
+	pos.z = 5 + sinf(test_t * 0.035f) * 2.0f;
+	
+	/* projection */
+	for (i = 0; i < 8; i++) {
+		float3 v; float iz;
 		
+		M_ADD3(v, pos, vertices[i]);
+		iz = 1.0f / v.z;
+		
+		pr[i].x = ((v.x * iz) + 0.5f) * test_buffer.width;
+		pr[i].y = ((v.y * iz) + 0.5f) * test_buffer.height;
+	}
+	
 	/* clear */
-	memset(tmp_buffer.data, 0, tmp_buffer.size * sizeof(float));
+	memset(test_buffer.data, 0, test_buffer.size * sizeof(float));
 	
-	/* draw a line */
-	m_raster_line(&tmp_buffer, &p0, &p1, color);
-	
-	/* blur */
-	m_image_gaussian_blur(&test_buffer, &tmp_buffer, 3, 6);
+	/* draw lines */
+	for (i = 0; i < 4; i++) {
+		int i2 = i == 3 ? 0 : i + 1;
+		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+	}
+	for (i = 4; i < 8; i++) {
+		int i2 = i == 7 ? 4 : i + 1;
+		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+	}
+	for (i = 0; i < 4; i++) {
+		int i2 = i + 4;
+		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+	}
 	
 	/* add some noise */
 	data = (float *)test_buffer.data;
 	for (i = 0; i < test_buffer.size; i++) {
-		data[i] += ((float)rand() / (float)RAND_MAX) * 0.125f;
+		data[i] += ((float)rand() / (float)RAND_MAX) * 0.25f;
 	}
+}
+
+void main_loop(void)
+{	
+	draw();
+	test_update();
 }
 
 int main(int argc, char **argv)
 {	
-	if (! test_create("M - RasterToy", 256, 128))
+	if (! test_create("M - RasterToy", 256, 256))
 		return EXIT_FAILURE;
 	
-	m_image_create(&tmp_buffer, test_buffer.type, test_buffer.width, test_buffer.height, test_buffer.comp);
-	
+	#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(main_loop, 0, 1);
+	#else
 	while (test_state) {
-		draw();
-		test_update();
+		main_loop();
 		thrd_yield();
 	}
-	
-	m_image_destroy(&tmp_buffer);
+	#endif
+
 	test_destroy();
 	return EXIT_SUCCESS;
 }
