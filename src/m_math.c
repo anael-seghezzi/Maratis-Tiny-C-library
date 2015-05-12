@@ -275,8 +275,9 @@ int m_2d_line_to_line_intersection(float2 *dest, float2 *p11, float2 *p12, float
 
 int m_2d_box_to_box_collision(float2 *min1, float2 *max1, float2 *min2, float2 *max2)
 {
-	return (fabs(min1->x - min2->x) * 2 < ((max1->x - min1->x) + (max2->x - min2->x))) &&
-           (fabs(min1->y - min2->y) * 2 < ((max1->y - min1->y) + (max2->y - min2->y)));
+	return !(
+	(min1->x > max2->x) || (max1->x < min2->x) ||
+	(min1->y > max2->y) || (max1->y < min2->y));
 }
 
 float m_3d_polyline_length(float3 *points, int count)
@@ -291,9 +292,10 @@ float m_3d_polyline_length(float3 *points, int count)
 
 int m_3d_box_to_box_collision(float3 *min1, float3 *max1, float3 *min2, float3 *max2)
 {
-	return (fabs(min1->x - min2->x) * 2 < ((max1->x - min1->x) + (max2->x - min2->x))) &&
-           (fabs(min1->y - min2->y) * 2 < ((max1->y - min1->y) + (max2->y - min2->y))) &&
-           (fabs(min1->z - min2->z) * 2 < ((max1->z - min1->z) + (max2->z - min2->z)));
+	return !(
+	(min1->x > max2->x) || (max1->x < min2->x) ||
+	(min1->y > max2->y) || (max1->y < min2->y) ||
+	(min1->z > max2->z) || (max1->z < min2->z));
 }
 
 int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direction, float3 *box_min, float3 *box_max, float *in, float *out)
