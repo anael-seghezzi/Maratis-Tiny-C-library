@@ -28,6 +28,39 @@
 #include <m_color.h>
 
 
+static float _sRGB_to_linear(float src)
+{
+    float l;
+    if(src <= 0.03928)
+        l = src / 12.92;
+    else
+        l = pow((src + 0.055) / 1.055, 2.4);
+    return l;
+}
+
+static float _linear_to_sRGB(float src)
+{
+    const float a = 0.055;
+    if(src < 0.0031308)
+        return 12.92 * src;
+    else
+        return (1.0 + a) * pow(src, 1.0/2.4) - a;
+}
+
+void m_color_sRGB_to_linear(float *src, float *dest)
+{
+	dest[0] = _sRGB_to_linear(src[0]);
+	dest[1] = _sRGB_to_linear(src[1]);
+	dest[2] = _sRGB_to_linear(src[2]);
+}
+
+void m_color_linear_to_sRGB(float *src, float *dest)
+{
+	dest[0] = _linear_to_sRGB(src[0]);
+	dest[1] = _linear_to_sRGB(src[1]);
+	dest[2] = _linear_to_sRGB(src[2]);
+}
+
 void m_color_RGB_to_HSV(float *src, float *dest)
 {
 	float r = src[0];
@@ -159,7 +192,7 @@ void m_color_RGB_to_HSL(float *src, float *dest)
 	dest[0] = h; dest[1] = s; dest[2] = l;
 }
 
-float _hue_to_RGB(float v1, float v2, float v3)
+static float _hue_to_RGB(float v1, float v2, float v3)
 {
 	float v3x6 = v3 * 6;
 	if (v3 < 0) v3 += 1;

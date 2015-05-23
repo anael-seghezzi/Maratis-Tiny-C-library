@@ -30,6 +30,7 @@
 #include <memory.h>
 #include <assert.h>
 #include <m_image_filter.h>
+#include <m_color.h>
 
 
 void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size)
