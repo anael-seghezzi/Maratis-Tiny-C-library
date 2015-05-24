@@ -31,7 +31,7 @@
 static float _sRGB_to_linear(float src)
 {
     float l;
-    if(src <= 0.03928)
+    if (src <= 0.03928)
         l = src / 12.92;
     else
         l = pow((src + 0.055) / 1.055, 2.4);
@@ -41,7 +41,7 @@ static float _sRGB_to_linear(float src)
 static float _linear_to_sRGB(float src)
 {
     const float a = 0.055;
-    if(src < 0.0031308)
+    if (src < 0.0031308)
         return 12.92 * src;
     else
         return (1.0 + a) * pow(src, 1.0/2.4) - a;
