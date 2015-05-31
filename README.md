@@ -1,9 +1,10 @@
 Maratis Tiny C library
 ======================
 
-Maratis Tiny C library is a collection of small and efficient math and image processing routines written in C. Some of the code should be compatible with both standard C, OpenCL and CUDA, though GPGPU compatibility is still in progress. In other cases, the code is dependent on memory allocation (malloc/free) and multithreading is handled by OpenMP.
+is a collection of small and efficient math and image processing routines written in C. Some of the code should be compatible with both standard C, OpenCL and CUDA, though GPGPU compatibility is still in progress. In other cases, the code is dependent on memory allocation (malloc/free) and multithreading is handled by OpenMP.
 
-* free and open-source
+* small
+* free
 * no dependencies
 
 Math
@@ -11,31 +12,35 @@ Math
 
 * vector manipulation
 * float array routines (normalization, convolution...)
-* structure tensor field, harris response
+* structure tensor field (harris response, flow-field)
 * interpolation (cubic, catmullrom)
-* 2d geometry routines
-* 3d routines (geometry, primitives raytracing)
+* 2d routines
+* 3d routines
+  * voxeliser (tri-box overlap)
+  * raytracing (sphere, plane, box, triangle)
 
 Color conversion
 ----------------
 
 * RGB, HSV, HSL
+* sRGB / linear
 
 Rasterization
 -------------
 
-* float4-attribute triangle
+* triangle with interpolation (perspective correct)
 * basic line, circle and polygon
 
 Image (CPU only)
 ----------------
 
-* simple image manipulation (copy, conversion, mirror, reframe...)
+* ubyte, ushort, int, half, float...
+* copy, conversions, mirror, reframe, rotate...
 * filters (convolution, gaussian blur, sobel, harris)
-* resizing (pyrdown, resize)
-* morphology operations (floodfill, dilate, erode, thinning...)
+* resizing, pyrdown
+* morphology (floodfill, dilate, erode, thinning...)
 * corner detection (harris, non-maxima suppression)
-* distance and voronoi functions
+* distance transform and voronoi
 
 Building the tests (CMake)
 --------------------------
