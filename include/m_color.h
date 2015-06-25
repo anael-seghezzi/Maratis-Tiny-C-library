@@ -31,8 +31,8 @@
 #include "m_math.h"
 
 /* color convertion */
-M_API void m_color_sRGB_to_linear(float *src, float *dest);
-M_API void m_color_linear_to_sRGB(float *src, float *dest);
+M_API void m_color_sRGB_to_linear(float *src, float *dest, int size);
+M_API void m_color_linear_to_sRGB(float *src, float *dest, int size);
 M_API void m_color_RGB_to_HSV(float *src, float *dest);
 M_API void m_color_HSV_to_RGB(float *src, float *dest);
 M_API void m_color_RGB_to_HSL(float *src, float *dest);

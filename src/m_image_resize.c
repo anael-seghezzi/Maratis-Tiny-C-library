@@ -94,7 +94,7 @@ void m_image_resize(struct m_image *dest, const struct m_image *src, int new_wid
 	float rx = (float)width / (float)new_width;
 	float ry = (float)height / (float)new_height;
 
-	/* TODO: use pyrdown for large scaling down */
+	/* TODO: use pyrdown for large scaling down ? */
 
 	assert(src->size > 0 && src->type == M_FLOAT);
 	m_image_create(dest, M_FLOAT, new_width, new_height, comp);

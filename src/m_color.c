@@ -34,7 +34,7 @@ static float _sRGB_to_linear(float src)
     if (src <= 0.03928)
         l = src / 12.92;
     else
-        l = pow((src + 0.055) / 1.055, 2.4);
+        l = powf((src + 0.055) / 1.055, 2.4);
     return l;
 }
 
@@ -44,21 +44,21 @@ static float _linear_to_sRGB(float src)
     if (src < 0.0031308)
         return 12.92 * src;
     else
-        return (1.0 + a) * pow(src, 1.0/2.4) - a;
+        return (1.0 + a) * powf(src, 1.0/2.4) - a;
 }
 
-void m_color_sRGB_to_linear(float *src, float *dest)
+void m_color_sRGB_to_linear(float *src, float *dest, int size)
 {
-	dest[0] = _sRGB_to_linear(src[0]);
-	dest[1] = _sRGB_to_linear(src[1]);
-	dest[2] = _sRGB_to_linear(src[2]);
+	int i;
+	for (i = 0; i < size; i++)
+		dest[i] = _sRGB_to_linear(src[i]);
 }
 
-void m_color_linear_to_sRGB(float *src, float *dest)
+void m_color_linear_to_sRGB(float *src, float *dest, int size)
 {
-	dest[0] = _linear_to_sRGB(src[0]);
-	dest[1] = _linear_to_sRGB(src[1]);
-	dest[2] = _linear_to_sRGB(src[2]);
+	int i;
+	for (i = 0; i < size; i++)
+		dest[i] = _linear_to_sRGB(src[i]);
 }
 
 void m_color_RGB_to_HSV(float *src, float *dest)
