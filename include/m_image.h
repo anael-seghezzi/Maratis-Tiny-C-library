@@ -60,8 +60,8 @@ static struct m_image m_image_identity(void)
 
 #ifndef __OPENCL_VERSION__
 
-/* fully supported types are: M_UBYTE, M_USHORT, M_FLOAT
-   partially supported types: M_BYTE, M_SHORT, M_INT, M_UINT (partial support for conversion) */
+/* fully supported types are: M_UBYTE, M_USHORT, M_HALF, M_FLOAT
+   partially supported types: M_BYTE, M_SHORT, M_INT, M_UINT (no support for conversion) */
 M_API void m_image_create(struct m_image *image, char type, int width, int height, int comp);
 M_API void m_image_destroy(struct m_image *image);
 
