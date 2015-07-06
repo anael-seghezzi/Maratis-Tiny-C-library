@@ -73,6 +73,7 @@ ENDIF()
 ## Set up 3rd party dependencies
 SET(GLFW_INCLUDE_DIR ${MTCL_SOURCE_DIR}/tests/3rdparty/glfw/include)
 SET(TINYCTHREAD_INCLUDE_DIR ${MTCL_SOURCE_DIR}/tests/3rdparty/tinycthread/source)
+SET(STB_INCLUDE_DIR ${MTCL_SOURCE_DIR}/tests/3rdparty/stb)
 SET(GLFW_LIBRARIES glfw)
 SET(TINYCTHREAD_LIBRARIES tinycthread)
 
@@ -85,3 +86,4 @@ ADD_SUBDIRECTORY(tests/3rdparty)
 ADD_SUBDIRECTORY(tests/raster)
 ADD_SUBDIRECTORY(tests/raytracing)
 ADD_SUBDIRECTORY(tests/voronoi)
+ADD_SUBDIRECTORY(tests/vorogen)

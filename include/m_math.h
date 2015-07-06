@@ -135,6 +135,7 @@ M_API void m_normalize(float *dest, float *src, int size); /* dest = src / norm(
 M_API void m_normalize_sum(float *dest, float *src, int size); /* dest = src / sum(src) */
 M_API float m_mean(float *src, int size);
 M_API float m_convolution(float *src1, float *src2, int size); /* a dot product really */
+M_API float m_squared_distance(float *src1, float *src2, int size);
 M_API float m_chi_squared_distance(float *src1, float *src2, int size); /* good at estimating signed hystograms difference */
 
 /* convolution kernel */

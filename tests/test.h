@@ -32,6 +32,12 @@
 #include <GLFW/glfw3.h>
 #include <m_image.h>
 
+#ifdef WIN32
+#include <WinBase.h>
+#else
+#include <unistd.h>
+#endif
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #else
@@ -98,6 +104,22 @@ static void send_texture(void)
 	
 	glBindTexture(GL_TEXTURE_2D, test_texture);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, test_buffer_ubyte.width, test_buffer_ubyte.height, GL_RGB, GL_UNSIGNED_BYTE, test_buffer_ubyte.data);
+}
+
+void test_get_directory(char *dest, const char *src)
+{
+    strcpy(dest, src);
+    char *s = strrchr(dest,'/');
+    if (s) *s = '\0';
+}
+
+void test_set_working_dir(const char *dir)
+{
+    #ifdef WIN32
+		SetCurrentDirectory(dir);
+	#else
+		chdir(dir);
+	#endif
 }
 
 int test_create(const char *title, int width, int height)

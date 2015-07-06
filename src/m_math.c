@@ -76,6 +76,16 @@ float m_mean(float *src, int size)
 	return size > 0 ? mean / (float)size : 0;
 }
 
+float m_squared_distance(float *src1, float *src2, int size)
+{
+	float score = 0; int i;
+	for (i = 0; i < size; i++) {
+		float x = src2[i] - src1[i];
+		score += x * x;
+	}
+	return score;
+}
+
 float m_chi_squared_distance(float *src1, float *src2, int size)
 {
 	float sum1 = 0, sum2 = 0, score; int i;
