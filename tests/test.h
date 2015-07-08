@@ -32,16 +32,16 @@
 #include <GLFW/glfw3.h>
 #include <m_image.h>
 
-#ifdef WIN32
-#include <WinBase.h>
-#else
-#include <unistd.h>
-#endif
-
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #else
 #include <tinycthread.h>
+#endif
+
+#ifdef WIN32
+#include <WinBase.h>
+#else
+#include <unistd.h>
 #endif
 
 GLFWwindow *test_glfw_window = NULL;
@@ -108,8 +108,9 @@ static void send_texture(void)
 
 void test_get_directory(char *dest, const char *src)
 {
+	char *s;
     strcpy(dest, src);
-    char *s = strrchr(dest,'/');
+    s = strrchr(dest,'/');
     if (s) *s = '\0';
 }
 
