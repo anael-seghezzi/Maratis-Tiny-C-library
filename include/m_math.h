@@ -45,6 +45,9 @@
 #define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #define M_ABS(a) (((a) < 0) ? -(a) : (a))
 #define M_ISPOWEROFTWO(x) (((x&(x - 1)) == 0) && (x != 0))
+#define M_INDEX_TO_2D(id, w, x, y) (y) = (id) / (w); (x) = (id) - ((y) * (w));
+
+#ifndef __OPENCL_VERSION__
 #define M_SHUFFLE(data, size, T) {\
 	T *ptr = (T *)(data); int i;\
 	for (i = 0; i < size; i++) {\
@@ -52,6 +55,7 @@
 		T tmp = ptr[i]; ptr[i] = ptr[ri]; ptr[ri] = tmp;\
 	}\
 }
+#endif
 
 M_API unsigned int m_next_power_of_two(unsigned int x);
 
