@@ -178,6 +178,8 @@ void m_color_RGB_to_HSL(float *src, float *dest)
 		h = ((r - g) / delta) + 4.0f;
 
     h *= 60.0f;
+    if (h < 0) h += 360;
+    
     s = delta / (1.0f - fabs(2.0f * l - 1.0f));
 	
 	dest[0] = h;
