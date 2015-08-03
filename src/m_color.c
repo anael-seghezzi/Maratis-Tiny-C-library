@@ -170,37 +170,19 @@ void m_color_RGB_to_HSL(float *src, float *dest)
 		return;
 	}
 
-	if (l < 0.5f)
-		s = delta / (max + min);
-	else
-		s = delta / (2 - delta);
-	
-	dr = (((max - r) / 6.0f) + (delta * 0.5f) ) / delta;
-	dg = (((max - g) / 6.0f) + (delta * 0.5f) ) / delta;
-	db = (((max - b) / 6.0f) + (delta * 0.5f) ) / delta;
-	
-	if(r == max)
-		h = db - dg;
+    if(r == max)
+        h = fmod(((g - b) / delta), 6.0f);
 	else if(g == max)
-		h = (1.0f / 3.0f) + dr - db;
-	else if(b == max)
-		h = (2.0f / 3.0f) + dg - dr;
-	
-	if (h < 0) h++;
-	if (h > 1) h--;
-	
-	dest[0] = h; dest[1] = s; dest[2] = l;
-}
+		h = ((b - r) / delta) + 2.0f;
+	else
+		h = ((r - g) / delta) + 4.0f;
 
-static float _hue_to_RGB(float v1, float v2, float v3)
-{
-	float v3x6 = v3 * 6;
-	if (v3 < 0) v3 += 1;
-	if (v3 > 1) v3 -= 1;
-	if (v3x6 < 1) return (v1 + (v2 - v1) * v3x6);
-	if ((2 * v3) < 1) return v2;
-	if ((3 * v3) < 2) return (v1 + (v2 - v1) * ((2.0f / 3.0f) - v3) * 6);
-	return v1;
+    h *= 60.0f;
+    s = delta / (1.0f - fabs(2.0f * l - 1.0f));
+	
+	dest[0] = h;
+	dest[1] = s;
+	dest[2] = l;
 }
 
 void m_color_HSL_to_RGB(float *src, float *dest)
@@ -208,20 +190,50 @@ void m_color_HSL_to_RGB(float *src, float *dest)
 	float h = src[0];
 	float s = src[1];
 	float l = src[2];
-	float v1, v2;
+	float c, m, x;
 	
 	if (s == 0) {
 		dest[0] = l; dest[1] = l; dest[2] = l;
 		return;
 	}
-
-	if (l < 0.5f)
-		v2 = l * (1.0f + s);
-	else
-		v2 = (l + s) - (s * l);
 	
-	v1 = 2.0f * l - v2;
-	dest[0] = _hue_to_RGB(v1, v2, h + (1.0f / 3.0f));
-	dest[1] = _hue_to_RGB(v1, v2, h);
-	dest[2] = _hue_to_RGB(v1, v2, h - (1.0f / 3.0f));
+	c = (1.0f - fabs(2.0f * l - 1.0f)) * s;
+    m = 1.0f * (l - 0.5f * c);
+    x = c * (1.0f - fabs(fmod(h / 60.0f, 2) - 1.0f));
+    
+    if (h >= 0.0f && h < 60.0f) {
+        dest[0] = c + m;
+      	dest[1] = x + m;
+      	dest[2] = m;
+    }
+    else if (h >= 60.0f && h < 120.0f) {
+        dest[0] = x + m;
+      	dest[1] = c + m;
+      	dest[2] = m;
+    }
+    else if (h < 120.0f && h < 180.0f) {
+        dest[0] = m;
+      	dest[1] = c + m;
+      	dest[2] = x + m;
+    }
+    else if (h >= 180.0f && h < 240.0f) {
+        dest[0] = m;
+      	dest[1] = x + m;
+      	dest[2] = c + m;
+    }
+    else if (h >= 240.0f && h < 300.0f) {
+        dest[0] = x + m;
+      	dest[1] = m;
+      	dest[2] = c + m;
+    }
+    else if (h >= 300.0f && h < 360.0f) {
+        dest[0] = c + m;
+      	dest[1] = m;
+      	dest[2] = x + m;
+    }
+    else {
+        dest[0] = m;
+        dest[1] = m;
+        dest[2] = m;
+    }
 }

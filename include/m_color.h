@@ -30,7 +30,8 @@
 
 #include "m_math.h"
 
-/* color convertion */
+/* color convertion
+   note: hue is in the range 0-360, all other values are in the range 0-1 */
 M_API void m_color_sRGB_to_linear(float *src, float *dest, int size);
 M_API void m_color_linear_to_sRGB(float *src, float *dest, int size);
 M_API void m_color_RGB_to_HSV(float *src, float *dest);
