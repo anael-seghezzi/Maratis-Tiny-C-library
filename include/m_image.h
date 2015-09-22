@@ -50,13 +50,8 @@ struct m_image
 	char type;
 };
 
-/* identity, must be called before m_image_create */
+/* identity, must be used before calling m_image_create */
 #define M_IMAGE_IDENTITY() {0, 0, 0, 0, 0, 0}
-static struct m_image m_image_identity(void)
-{
-	struct m_image identity = M_IMAGE_IDENTITY();
-	return identity;
-}
 
 #ifndef __OPENCL_VERSION__
 

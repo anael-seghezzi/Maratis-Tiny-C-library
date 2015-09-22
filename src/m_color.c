@@ -28,37 +28,31 @@
 #include <m_color.h>
 
 
-static float _sRGB_to_linear(float src)
+void m_color_linear_to_sRGB(float *src, float *dest, int size)
 {
-    float l;
-    if (src <= 0.03928)
-        l = src / 12.92;
-    else
-        l = powf((src + 0.055) / 1.055, 2.4);
-    return l;
-}
-
-static float _linear_to_sRGB(float src)
-{
-    const float a = 0.055;
-    if (src < 0.0031308)
-        return 12.92 * src;
-    else
-        return (1.0 + a) * powf(src, 1.0/2.4) - a;
+	const float a = 0.055;
+	int i;
+	for (i = 0; i < size; i++) {
+		if (*src < 0.0031308)
+			*dest = 12.92 * (*src);
+		else
+			*dest = (1.0 + a) * powf(*src, 1.0/2.4) - a;
+		dest++;
+		src++;
+	}
 }
 
 void m_color_sRGB_to_linear(float *src, float *dest, int size)
 {
 	int i;
-	for (i = 0; i < size; i++)
-		dest[i] = _sRGB_to_linear(src[i]);
-}
-
-void m_color_linear_to_sRGB(float *src, float *dest, int size)
-{
-	int i;
-	for (i = 0; i < size; i++)
-		dest[i] = _linear_to_sRGB(src[i]);
+	for (i = 0; i < size; i++) {
+		if (*src <= 0.03928)
+			*dest = *src / 12.92;
+		else
+			*dest = powf((*src + 0.055) / 1.055, 2.4);
+		dest++;
+		src++;
+	}
 }
 
 void m_color_RGB_to_HSV(float *src, float *dest)

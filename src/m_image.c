@@ -77,7 +77,7 @@ void m_image_create(struct m_image *image, char type, int width, int height, int
 void m_image_destroy(struct m_image *image)
 {
 	M_SAFE_FREE(image->data);
-	*image = m_image_identity();
+	memset(image, 0, sizeof(struct m_image));
 }
 
 void m_image_copy(struct m_image *dest, const struct m_image *src)

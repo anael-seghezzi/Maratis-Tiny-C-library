@@ -178,6 +178,76 @@ void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int 
 	M_SAFE_FREE(kernelx);
 }
 
+void m_image_grey(struct m_image *dest, const struct m_image *src)
+{
+	float *src_pixel;
+	float *dest_pixel;
+	int size = src->size;
+	int i, c = src->comp;
+
+	assert(src->size > 0 && src->type == M_FLOAT && src->comp > 2);
+	
+	m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+
+	src_pixel = (float *)src->data;
+	dest_pixel = (float *)dest->data;
+
+	for (i = 0; i < size; i+=c) {
+		float v = src_pixel[0] * 0.3f + src_pixel[1] * 0.5f + src_pixel[2] * 0.2f;
+		*dest_pixel = v;
+		dest_pixel++;
+		src_pixel+=c;
+	}
+}
+
+void m_image_max(struct m_image *dest, const struct m_image *src)
+{
+	float *src_pixel;
+	float *dest_pixel;
+	int size = src->size;
+	int i, j, c = src->comp;
+
+	assert(src->size > 0 && src->type == M_FLOAT);
+
+	m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+
+	src_pixel = (float *)src->data;
+	dest_pixel = (float *)dest->data;
+
+	for (i = 0; i < size; i+=c) {
+		float v = src_pixel[0];
+		for (j = 1; j < c; j++)
+			v = M_MAX(v, src_pixel[j]);
+		*dest_pixel = v;
+		dest_pixel++;
+		src_pixel+=c;
+	}
+}
+
+void m_image_max_abs(struct m_image *dest, const struct m_image *src)
+{
+	float *src_pixel;
+	float *dest_pixel;
+	int size = src->size;
+	int i, j, c = src->comp;
+
+	assert(src->size > 0 && src->type == M_FLOAT);
+
+	m_image_create(dest, M_FLOAT, src->width, src->height, 1);
+
+	src_pixel = (float *)src->data;
+	dest_pixel = (float *)dest->data;
+
+	for (i = 0; i < size; i+=c) {
+		float v = fabsf(src_pixel[0]);
+		for (j = 1; j < c; j++)
+			v = M_MAX(v, fabsf(src_pixel[j]));
+		*dest_pixel = v;
+		dest_pixel++;
+		src_pixel+=c;
+	}
+}
+
 static float _convolve_pixel(float *data, int width, float *kernel)
 {
 	float sum = 0; int i, j;

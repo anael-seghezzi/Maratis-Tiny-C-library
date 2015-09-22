@@ -36,6 +36,11 @@ M_API void m_image_convolution_h(struct m_image *dest, const struct m_image *src
 M_API void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
 M_API void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int dx, int dy);
 
+/* create 1 component image */
+M_API void m_image_grey(struct m_image *dest, const struct m_image *src);
+M_API void m_image_max(struct m_image *dest, const struct m_image *src);
+M_API void m_image_max_abs(struct m_image *dest, const struct m_image *src);
+
 /* float 1-component image only */
 M_API void m_image_sobel(struct m_image *dest, const struct m_image *src);
 M_API void m_image_harris(struct m_image *dest, const struct m_image *src, int radius);

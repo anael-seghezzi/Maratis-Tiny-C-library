@@ -101,8 +101,14 @@ void m_image_resize(struct m_image *dest, const struct m_image *src, int new_wid
 
 	if (new_width < width || new_height < height) {
 		float r = M_MAX(rx, ry);
-		m_image_gaussian_blur(&tmp, src, (int)r - 1, (int)r - 1);
-		_bilinear(dest, &tmp, rx, ry, -0.5f);
+		int ir = (int)r - 1;
+		if (ir > 0) {
+			m_image_gaussian_blur(&tmp, src, ir, ir);
+			_bilinear(dest, &tmp, rx, ry, -0.5f);
+		}
+		else {
+			_bilinear(dest, src, rx, ry, -0.5f);
+		}
 	}
 	else {
 		_bilinear(dest, src, rx, ry, -0.5f);
