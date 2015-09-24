@@ -47,20 +47,20 @@
 #endif
 
 GLFWwindow *test_glfw_window = NULL;
-static char test_title[256];
-static int test_state = 1;
-static int test_width = 0;
-static int test_height = 0;
-static int test_tex_width = 0;
-static int test_tex_height = 0;
-static float test_mouse_x = 0;
-static float test_mouse_y = 0;
-static unsigned long test_t = 0;
+char test_title[256];
+int test_state = 1;
+int test_width = 0;
+int test_height = 0;
+int test_tex_width = 0;
+int test_tex_height = 0;
+float test_mouse_x = 0;
+float test_mouse_y = 0;
+unsigned long test_t = 0;
 
-static GLuint test_texture;
+GLuint test_texture;
 
 #define TEST_BUTTON_COUNT 8
-static char test_button[TEST_BUTTON_COUNT][2]; // (release, press), pressed
+char test_button[TEST_BUTTON_COUNT][2]; // (release, press), pressed
 
 static void close_callback(GLFWwindow * window)
 {
@@ -231,7 +231,11 @@ void test_get_directory(char *dest, const char *src)
 {
 	char *s;
     strcpy(dest, src);
-    s = strrchr(dest,'/');
+	#ifdef WIN32
+		s = strrchr(dest,'\\');
+	#else
+		s = strrchr(dest,'/');
+	#endif
     if (s) *s = '\0';
 }
 
@@ -263,10 +267,12 @@ void test_window_title(const char *title)
 int test_window(const char *title, int fullscreen)
 {
 	GLFWmonitor *monitor = NULL;
-	
+	GLFWwindow *win;
+
 	if (fullscreen) {
+		const GLFWvidmode *mode;
 		monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+		mode = glfwGetVideoMode(monitor);
 		
 		glfwWindowHint(GLFW_RED_BITS, mode->redBits);
 		glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
@@ -277,7 +283,7 @@ int test_window(const char *title, int fullscreen)
 		test_height = mode->height;
 	}
 	
-	GLFWwindow *win = glfwCreateWindow(test_width, test_height, title, monitor, test_glfw_window);
+	win = glfwCreateWindow(test_width, test_height, title, monitor, test_glfw_window);
 	if (win == NULL)
 		return 0;
 	
