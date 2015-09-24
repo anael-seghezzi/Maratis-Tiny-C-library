@@ -35,9 +35,10 @@
 #include <m_dist.h>
 #include <m_image_filter.h>
 #include <m_image_resize.h>
+#include <m_color.h>
 
 #define POP_COUNT 128
-#define POINT_COUNT 128
+#define POINT_COUNT 64
 #define RANDF ((float)rand() / (float)RAND_MAX)
 
 struct test_point
@@ -45,6 +46,8 @@ struct test_point
 	float2 pos;
 	float3 col;
 };
+
+static struct m_image test_buffer = M_IMAGE_IDENTITY();
 
 static struct test_point population[POP_COUNT][POINT_COUNT];
 static struct test_point population_copy[POP_COUNT][POINT_COUNT];
@@ -86,6 +89,62 @@ static int get_best_tournament(float *error, int count, int tour_size)
 	}
 	
 	return best;
+}
+
+static int get_best_dual(float *error, float *energy, int POP_SIZE, float p)
+{
+    float r = RANDF;
+    int id1 = rand() % POP_SIZE;
+    int id2 = rand() % POP_SIZE;
+	int best = id1;
+	
+	if ((r > p) || (energy == NULL)) {
+		if (error[id1] < error[id2])
+			best = id1;
+		else if(error[id1] > error[id2])
+			best = id2;
+	}
+	else {
+		if (! (error[id1] > error[id2] && energy[id1] > energy[id2])) {
+			if(error[id1] < error[id2] || energy[id1] < energy[id2]) {
+				best = id1;
+			}
+		}
+		if (! (error[id2] > error[id1] && energy[id2] > energy[id1])) {
+			if(error[id2] < error[id1] || energy[id2] < energy[id1]) {
+				best = id2;
+			}
+		}
+	}
+
+	return best;
+}
+
+static int get_best_dual4(float *error, float *energy, int POP_SIZE, float p)
+{
+	float er4[4];
+	float en4[4];
+	float er2[2];
+	float en2[2];
+	int id4[4];
+	int id2[2];
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		int best = get_best_dual(error, energy, POP_SIZE, p);
+		id4[i] = best;
+		er4[i] = error[best];
+		en4[i] = energy[best];
+	}
+
+	for (i = 0; i < 2; i++) {
+		int best = get_best_dual(er4, en4, 4, p);
+		id2[i] = id4[best];
+		er2[i] = er4[best];
+		en2[i] = en4[best];
+	}
+
+	return id2[get_best_dual(er2, en2, 2, p)];
 }
 
 static void mate(float *data, float *src1, float *src2, int s, int c)
@@ -133,6 +192,7 @@ static void mutate(struct test_point *pts, int size, struct m_image *src)
     		pts[i].col.x = src_pixel[0];
     		pts[i].col.y = src_pixel[1];
     		pts[i].col.z = src_pixel[2];
+    		m_color_RGB_to_HSL(&pts[i].col, &pts[i].col);
         }
         
         if (RANDF < p) {
@@ -145,10 +205,10 @@ static void mutate(struct test_point *pts, int size, struct m_image *src)
         
         if (RANDF < p) {
             float3 col = pts[i].col;
-            col.x += (RANDF - 0.5f) * s1;
+            col.x += (RANDF - 0.5f) * s1*45;
             col.y += (RANDF - 0.5f) * s1;
             col.z += (RANDF - 0.5f) * s1;
-            if (col.x >= 0 && col.x <= 1 && col.y >= 0 && col.y <= 1 && col.y >= 0 && col.y <= 1)
+            if (col.x >= 0 && col.x <= 360 && col.y >= 0 && col.y <= 1 && col.y >= 0 && col.y <= 1)
                 pts[i].col = col;
         }
     }
@@ -181,7 +241,33 @@ static void gen(struct test_point *pts, struct m_image *src)
 		pts[i].col.x = src_pixel[0];
 		pts[i].col.y = src_pixel[1];
 		pts[i].col.z = src_pixel[2];
+		m_color_RGB_to_HSL(&pts[i].col, &pts[i].col);
 	} 
+}
+
+static float get_originality(int id)
+{
+    struct test_point *ip = population + id;
+    float diff = 0;
+    int i;
+    
+    for (i = 0; i < POP_COUNT; i++) {
+        if (i != id) {
+            int j;
+            
+            for (j = 0; j <POINT_COUNT; j++) {
+             
+                diff += fabs(ip[j].pos.x - population[i][j].pos.x) * 16.0f;
+                diff += fabs(ip[j].pos.y - population[i][j].pos.y) * 16.0f;
+                
+                diff += fabs(ip[j].col.x - population[i][j].col.x) / 360.0f;
+                diff += fabs(ip[j].col.y - population[i][j].col.y);
+                diff += fabs(ip[j].col.z - population[i][j].col.z) * 2;
+            }
+        }
+    }
+    
+    return diff;
 }
 
 static float get_score(struct m_image *a, struct m_image *b)
@@ -219,6 +305,7 @@ static void render(struct m_image *dest, struct test_point *pts, int pts_count)
 		dest_data[0] = pts[i].col.x;
 		dest_data[1] = pts[i].col.y;
 		dest_data[2] = pts[i].col.z;
+		m_color_HSL_to_RGB(dest_data, dest_data);
 	}
 
 	m_image_voronoi_transform(&tmp_buffer, &tmpi, &tmp_buffer);
@@ -234,6 +321,7 @@ static void init(void)
         exit(EXIT_FAILURE);
    
     m_image_ubyte_to_float(&src_image, &ubi);
+    m_color_sRGB_to_linear((float*)src_image.data, (float*)src_image.data, src_image.size);
     
     m_image_copy(&ubi, &src_image);
     m_image_resize(&src_image, &ubi, 128, 128);
@@ -257,6 +345,7 @@ static void clear(void)
 static void draw(void)
 {
     float error[POP_COUNT];
+    float energy[POP_COUNT];
     float min_error;
     int i, best = 0;
     
@@ -264,6 +353,9 @@ static void draw(void)
         render(&dest_image, population[i], POINT_COUNT);
         m_image_gaussian_blur(&dest_image, &dest_image, 1, 1);
         error[i] = get_score(&dest_image, &src_image);
+        #ifdef SELECT_DUAL
+        energy[i] = 1.0f / get_originality(i);
+        #endif
     }
     
     min_error = error[best];
@@ -282,8 +374,15 @@ static void draw(void)
     
     /* mate */
     for (i = 0; i < POP_COUNT; i++) {
+        
+        #ifdef SELECT_DUAL
+        int i1 = get_best_dual4(error, energy, POP_COUNT, 0.2f);
+		int i2 = get_best_dual4(error, energy, POP_COUNT, 0.2f);
+		#else
         int i1 = get_best_tournament(error, POP_COUNT, 3);
 		int i2 = get_best_tournament(error, POP_COUNT, 3);
+		#endif
+		
 		mate(
 			&population[i][0].pos.x,
 			&population_copy[i1][0].pos.x,
@@ -302,11 +401,12 @@ static void draw(void)
 void main_loop(void)
 {	
 	draw();
+    test_swap_buffer(&test_buffer);
 	test_update();
 }
 
 int main(int argc, char **argv)
-{	
+{
     char dir[256];
     test_get_directory(dir, argv[0]);
     test_set_working_dir(dir);
@@ -314,6 +414,7 @@ int main(int argc, char **argv)
 	if (! test_create("M - Vorogen", 256, 256))
 		return EXIT_FAILURE;
 
+    m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
 	init();
 
 	#ifdef __EMSCRIPTEN__
@@ -325,6 +426,7 @@ int main(int argc, char **argv)
 	}
 	#endif
 
+    m_image_destroy(&test_buffer);
 	clear();
 	test_destroy();
 	return EXIT_SUCCESS;

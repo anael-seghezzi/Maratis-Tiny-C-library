@@ -28,7 +28,7 @@
 #ifndef _M_DIST_H_
 #define _M_DIST_H_
 
-#include <m_image.h>
+#include "m_image.h"
 #define M_DIST_MAX 1e20f
 
 /* raw distance functions

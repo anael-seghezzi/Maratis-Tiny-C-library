@@ -42,6 +42,7 @@ struct test_point
 	float3 col;
 };
 
+static struct m_image test_buffer = M_IMAGE_IDENTITY();
 static struct test_point points[POINT_COUNT];
 static struct m_image tmp_buffer = M_IMAGE_IDENTITY();
 static struct m_image tmpi = M_IMAGE_IDENTITY();
@@ -137,6 +138,7 @@ void main_loop(void)
 {	
     animate();
 	draw();
+	test_swap_buffer(&test_buffer);
 	test_update();
 }
 
@@ -145,6 +147,7 @@ int main(int argc, char **argv)
 	if (! test_create("M - VoronoiTest", 256, 256))
 		return EXIT_FAILURE;
 
+	m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
 	init();
 
 	#ifdef __EMSCRIPTEN__
@@ -156,6 +159,7 @@ int main(int argc, char **argv)
 	}
 	#endif
 
+	m_image_destroy(&test_buffer);
 	clear();
 	test_destroy();
 	return EXIT_SUCCESS;

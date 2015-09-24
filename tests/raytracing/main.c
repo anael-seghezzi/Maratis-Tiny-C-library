@@ -33,6 +33,8 @@
 
 #define USE_NOISE /* comment to disable 3d noise (simple sphere raytracing) */
 
+static struct m_image test_buffer = M_IMAGE_IDENTITY();
+
 /* approximative noise */
 static struct m_image rand_image = M_IMAGE_IDENTITY();
 static struct m_image tmp = M_IMAGE_IDENTITY();
@@ -206,6 +208,7 @@ static void draw(void)
 void main_loop(void)
 {	
 	draw();
+	test_swap_buffer(&test_buffer);
 	test_update();
 }
 
@@ -214,6 +217,7 @@ int main(int argc, char **argv)
 	if (! test_create("M - RaytracingTest", 256, 256))
 		return EXIT_FAILURE;
 	
+	m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
 	init_noise();
 
 	#ifdef __EMSCRIPTEN__
@@ -225,6 +229,7 @@ int main(int argc, char **argv)
 	}
 	#endif
 	
+	m_image_destroy(&test_buffer);
 	destroy_noise();
 	test_destroy();
 	return EXIT_SUCCESS;

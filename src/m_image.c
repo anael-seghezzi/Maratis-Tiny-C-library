@@ -40,7 +40,7 @@ void m_image_create(struct m_image *image, char type, int width, int height, int
 	assert(size > 0);
 
 	/* already allocated */
-	if (image->data != 0 && type == image->type && width == image->width && height == image->height && comp == image->comp && size == image->size)
+	if (image->data != 0 && type == image->type && width == image->width && height == image->height && comp == image->comp)
 		return;
 
 	M_SAFE_FREE(image->data);

@@ -31,6 +31,7 @@
 #include <m_raster.h>
 #include <m_image_filter.h>
 
+static struct m_image test_buffer = M_IMAGE_IDENTITY();
 
 float3 vertices[8] = {
 	{-1, -1, -1},
@@ -94,6 +95,7 @@ void draw(void)
 void main_loop(void)
 {	
 	draw();
+	test_swap_buffer(&test_buffer);
 	test_update();
 }
 
@@ -102,6 +104,8 @@ int main(int argc, char **argv)
 	if (! test_create("M - RasterToy", 256, 256))
 		return EXIT_FAILURE;
 	
+	m_image_create(&test_buffer, M_FLOAT, 256, 256, 3);
+
 	#ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop(main_loop, 0, 1);
 	#else
@@ -111,6 +115,7 @@ int main(int argc, char **argv)
 	}
 	#endif
 
+	m_image_destroy(&test_buffer);
 	test_destroy();
 	return EXIT_SUCCESS;
 }
