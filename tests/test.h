@@ -168,18 +168,14 @@ static void updateGL(void)
 	draw_texture(test_texture);
 }
 
-static unsigned char srgb_table[4096];
-static void create_srbg_table(void)
+void test_setup_texture(int width, int height)
 {
-	float _src[4096], _dst[4096]; int i;
-	
-	for (i = 0; i < 4096; i++)
-		_src[i] = ((float)i + 0.5f) / 4095.0f;
-		
-	m_color_linear_to_sRGB(_src, _dst, 4096);
-	
-	for (i = 0; i < 4096; i++)
-		srgb_table[i] = (int)(_dst[i] * 255.0f + 0.5f);
+	glBindTexture(GL_TEXTURE_2D, test_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+	test_tex_width = width;
+	test_tex_height = height;
 }
 
 void test_swap_buffer(struct m_image *image)
@@ -188,27 +184,14 @@ void test_swap_buffer(struct m_image *image)
 
 	if (image) {
 		
+		if (image->width != test_tex_width || image->height != test_tex_height)
+			test_setup_texture(image->width, image->height);
+
 		glBindTexture(GL_TEXTURE_2D, test_texture);
-	
+
 		if (image->type == M_FLOAT)
 		{
-			// convert to srbg ubyte
-		
-			float *src_data;
-			unsigned char *dest_data;
-			int size = image->size;
-			int i;
-
-			m_image_create(&test_buffer_ubyte, M_UBYTE, image->width, image->height, image->comp);
-
-			src_data = (float *)image->data;
-			dest_data = (unsigned char *)test_buffer_ubyte.data;
-			for (i = 0; i < size; i++) {
-				float f = M_CLAMP(src_data[i], 0, 1);
-				short x = (short)(f * 4095);
-				dest_data[i] = srgb_table[x];
-			}
-		
+			m_image_float_to_srgb(&test_buffer_ubyte, image);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, test_buffer_ubyte.width, test_buffer_ubyte.height, GL_RGB, GL_UNSIGNED_BYTE, test_buffer_ubyte.data);
 		}
 		else if (image->type == M_UBYTE)
@@ -246,16 +229,6 @@ void test_set_working_dir(const char *dir)
 	#else
 		chdir(dir);
 	#endif
-}
-
-void test_setup_texture(int width, int height)
-{
-	glBindTexture(GL_TEXTURE_2D, test_texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-	test_tex_width = width;
-	test_tex_height = height;
 }
 
 void test_window_title(const char *title)
@@ -309,7 +282,6 @@ int test_window(const char *title, int fullscreen)
 int test_create(const char *title, int width, int height)
 {
 	memset(test_button, 0, TEST_BUTTON_COUNT*2*sizeof(char));
-	create_srbg_table();
 
 	glfwInit();
 
