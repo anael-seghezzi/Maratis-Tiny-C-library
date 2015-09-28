@@ -34,88 +34,88 @@
 
 void m_image_non_max_supp(struct m_image *dest, const struct m_image *src, int radius, float threshold)
 {
-	float *src_data, *dest_data;
-	float *src_pixel, *dest_pixel;
-	int width = src->width;
-	int height = src->height;
-	int x, y;
+   float *src_data, *dest_data;
+   float *src_pixel, *dest_pixel;
+   int width = src->width;
+   int height = src->height;
+   int x, y;
 
-	assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
+   assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
 
-	m_image_copy(dest, src);
+   m_image_copy(dest, src);
 
-	src_data = (float *)src->data;
-	dest_data = (float *)dest->data;
-	src_pixel = src_data;
-	dest_pixel = dest_data;
+   src_data = (float *)src->data;
+   dest_data = (float *)dest->data;
+   src_pixel = src_data;
+   dest_pixel = dest_data;
 
-	for (y = 0; y < height; y++)
-	for (x = 0; x < width; x++) {
+   for (y = 0; y < height; y++)
+   for (x = 0; x < width; x++) {
 
-		int minx, miny, maxx, maxy, xx, yy;
+      int minx, miny, maxx, maxy, xx, yy;
 
-		if (*src_pixel < threshold) {
-			*dest_pixel = 0;
-			goto end;
-		}
+      if (*src_pixel < threshold) {
+         *dest_pixel = 0;
+         goto end;
+      }
 
-		minx = M_MAX(0, x - radius);
-		miny = M_MAX(0, y - radius);
-		maxx = M_MIN(width - 1, x + radius);
-		maxy = M_MIN(height - 1, y + radius);
+      minx = M_MAX(0, x - radius);
+      miny = M_MAX(0, y - radius);
+      maxx = M_MIN(width - 1, x + radius);
+      maxy = M_MIN(height - 1, y + radius);
 
-		for (yy = miny; yy <= maxy; yy++)
-		for (xx = minx; xx <= maxx; xx++) {
+      for (yy = miny; yy <= maxy; yy++)
+      for (xx = minx; xx <= maxx; xx++) {
 
-			float *src_pixel2 = src_data + yy*width + xx;
-			if (*src_pixel2 > *src_pixel) {
-				*dest_pixel = 0;
-				goto end;
-			}
-		}
+         float *src_pixel2 = src_data + yy*width + xx;
+         if (*src_pixel2 > *src_pixel) {
+            *dest_pixel = 0;
+            goto end;
+         }
+      }
 
-		end:
-		src_pixel++;
-		dest_pixel++;
-	}
+      end:
+      src_pixel++;
+      dest_pixel++;
+   }
 }
 
 int m_image_corner_harris(const struct m_image *src, int margin, int radius, float threshold, int *corners, int max_count)
 {
-	struct m_image harris = M_IMAGE_IDENTITY();
-	struct m_image nms = M_IMAGE_IDENTITY();
-	float *pixel;
-	int width = src->width;
-	int height = src->height;
-	int wm = width - margin;
-	int hm = height - margin;
-	int x, y, count;
+   struct m_image harris = M_IMAGE_IDENTITY();
+   struct m_image nms = M_IMAGE_IDENTITY();
+   float *pixel;
+   int width = src->width;
+   int height = src->height;
+   int wm = width - margin;
+   int hm = height - margin;
+   int x, y, count;
 
-	if (width <= (margin * 2) || height <= (margin * 2))
-		return 0;
+   if (width <= (margin * 2) || height <= (margin * 2))
+      return 0;
 
-	m_image_harris(&harris, src, radius);
-	m_image_non_max_supp(&nms, &harris, radius, threshold);
+   m_image_harris(&harris, src, radius);
+   m_image_non_max_supp(&nms, &harris, radius, threshold);
 
-	count = 0;
-	pixel = (float *)nms.data;
+   count = 0;
+   pixel = (float *)nms.data;
 
-	for (y = 0; y < height; y++)
-	for (x = 0; x < width; x++) {
+   for (y = 0; y < height; y++)
+   for (x = 0; x < width; x++) {
 
-		if (count == max_count)
-			goto end;
+      if (count == max_count)
+         goto end;
 
-		if ((*pixel) > 0 && x >= margin && y >= margin && x < wm && y < hm) {
-			corners[count*2]   = x;
-			corners[count*2+1] = y;
-			count++;
-		}
-		pixel++;
-	}
+      if ((*pixel) > 0 && x >= margin && y >= margin && x < wm && y < hm) {
+         corners[count*2]   = x;
+         corners[count*2+1] = y;
+         count++;
+      }
+      pixel++;
+   }
 
-	end:
-	m_image_destroy(&nms);
-	m_image_destroy(&harris);
-	return count;
+   end:
+   m_image_destroy(&nms);
+   m_image_destroy(&harris);
+   return count;
 }

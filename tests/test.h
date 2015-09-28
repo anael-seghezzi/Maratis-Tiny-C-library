@@ -59,8 +59,15 @@ unsigned long test_t = 0;
 
 GLuint test_texture;
 
-#define TEST_BUTTON_COUNT 8
+#define TEST_BUTTON_COUNT GLFW_KEY_LAST
 char test_button[TEST_BUTTON_COUNT][2]; // (release, press), pressed
+
+#define TEST_MOUSE_BUTTON_COUNT GLFW_MOUSE_BUTTON_LAST
+char test_mouse_button[TEST_MOUSE_BUTTON_COUNT][2];
+
+#define TEST_CHAR_MAX 256
+int test_char_count = 0;
+unsigned int test_char_queue[TEST_CHAR_MAX];
 
 static void close_callback(GLFWwindow * window)
 {
@@ -81,58 +88,63 @@ static void cursorpos_callback(GLFWwindow * window, double x, double y)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	switch (key) {
-		case GLFW_KEY_RIGHT:
-		test_button[0][0] = action + 1;
-		test_button[0][1] = action;
-		break;
-		case GLFW_KEY_LEFT:
-		test_button[1][0] = action + 1;
-		test_button[1][1] = action;
-		break;
-		case GLFW_KEY_DOWN:
-		test_button[2][0] = action + 1;
-		test_button[2][1] = action;
-		break;
-		case GLFW_KEY_UP:
-		test_button[3][0] = action + 1;
-		test_button[3][1] = action;
-		break;
-		case GLFW_KEY_SPACE:
-		test_button[4][0] = action + 1;
-		test_button[4][1] = action;
-		break;
-		case GLFW_KEY_A:
-		test_button[5][0] = action + 1;
-		test_button[5][1] = action;
-		break;
-		case GLFW_KEY_Z:
-		test_button[6][0] = action + 1;
-		test_button[6][1] = action;
-		break;
-		case GLFW_KEY_ENTER:
-		test_button[7][0] = action + 1;
-		test_button[7][1] = action;
-		break;
+	if (key >=0 && key < TEST_BUTTON_COUNT) {
+		test_button[key][0] = action + 1;
+		test_button[key][1] = action;
 	}
 }
 
-static int test_key_press(int key)
+static void mousebutton_callback(GLFWwindow * window, int button, int action, int mods)
 {
-	if (key > TEST_BUTTON_COUNT) return 0;
+	if (button >=0 && button < TEST_MOUSE_BUTTON_COUNT) {
+		test_mouse_button[button][0] = action + 1;
+		test_mouse_button[button][1] = action;
+	}
+}
+
+static void char_callback(GLFWwindow * window, unsigned int key)
+{
+	if (test_char_count < TEST_CHAR_MAX) {
+		test_char_queue[test_char_count] = key;
+		test_char_count++;
+	}
+}
+
+int test_get_chars(unsigned int dest[TEST_CHAR_MAX])
+{
+	if (test_char_count > 0)
+		memcpy(dest, test_char_queue, test_char_count * sizeof(int));
+	return test_char_count;
+}
+
+int test_key_press(int key)
+{
 	return (test_button[key][0] == 2);
 }
 
-static int test_key_release(int key)
+int test_key_release(int key)
 {
-	if (key > TEST_BUTTON_COUNT) return 0;
 	return (test_button[key][0] == 1);
 }
 
-static int test_key_pressed(int key)
+int test_key_pressed(int key)
 {
-	if (key > TEST_BUTTON_COUNT) return 0;
 	return (test_button[key][1] > 0);
+}
+
+int test_mouse_button_press(int button)
+{
+	return (test_mouse_button[button][0] == 2);
+}
+
+int test_mouse_button_release(int button)
+{
+	return (test_mouse_button[button][0] == 1);
+}
+
+int test_mouse_button_pressed(int button)
+{
+	return (test_mouse_button[button][1] > 0);
 }
 
 static void draw_texture(GLuint texture)
@@ -269,6 +281,8 @@ int test_window(const char *title, int fullscreen)
 	glfwSetWindowCloseCallback(test_glfw_window, close_callback);
 	glfwSetWindowSizeCallback(test_glfw_window, size_callback);
 	glfwSetKeyCallback(test_glfw_window, key_callback);
+	glfwSetMouseButtonCallback(test_glfw_window, mousebutton_callback);
+	glfwSetCharCallback(test_glfw_window, char_callback);
 	glfwSetCursorPosCallback(test_glfw_window, cursorpos_callback);
 	glfwMakeContextCurrent(test_glfw_window);
 	
@@ -282,6 +296,7 @@ int test_window(const char *title, int fullscreen)
 int test_create(const char *title, int width, int height)
 {
 	memset(test_button, 0, TEST_BUTTON_COUNT*2*sizeof(char));
+	memset(test_mouse_button, 0, TEST_MOUSE_BUTTON_COUNT*2*sizeof(char));
 
 	glfwInit();
 
@@ -302,6 +317,8 @@ int test_create(const char *title, int width, int height)
 void test_window_size(int width, int height)
 {
 	glfwSetWindowSize(test_glfw_window, width, height);
+	test_width = width;
+	test_height = height;
 }
 
 void test_destroy(void)
@@ -315,8 +332,12 @@ void test_destroy(void)
 void test_update(void)
 {
 	int i;
+	// flush events
 	for (i = 0; i < TEST_BUTTON_COUNT; i++)
-		test_button[i][0] = 0; // flush event
+		test_button[i][0] = 0;
+	for (i = 0; i < TEST_MOUSE_BUTTON_COUNT; i++)
+		test_mouse_button[i][0] = 0; 
+	test_char_count = 0;
 	glfwPollEvents();
 	test_t++;
 }

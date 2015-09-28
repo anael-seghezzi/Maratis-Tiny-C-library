@@ -35,84 +35,83 @@
 
 void m_image_pyrdown(struct m_image *dest, const struct m_image *src)
 {
-	struct m_image tmp = M_IMAGE_IDENTITY();
-	float *src_data;
-	float *dest_pixel;
-	int width = src->width;
-	int height = src->height;
-	int comp = src->comp;
-	int comp2 = comp * 2;
-	int ystep = width * comp * 2;
-	int w2 = width / 2;
-	int h2 = height / 2;
-	int x, y, i;
+   struct m_image tmp = M_IMAGE_IDENTITY();
+   float *src_data;
+   float *dest_pixel;
+   int width = src->width;
+   int height = src->height;
+   int comp = src->comp;
+   int comp2 = comp * 2;
+   int ystep = width * comp * 2;
+   int w2 = width / 2;
+   int h2 = height / 2;
+   int x, y, i;
 
-	m_image_gaussian_blur(&tmp, src, 1, 1);
-	m_image_create(dest, M_FLOAT, w2, h2, comp);
+   m_image_gaussian_blur(&tmp, src, 1, 1);
+   m_image_create(dest, M_FLOAT, w2, h2, comp);
 
-	src_data = (float *)tmp.data;
-	dest_pixel = (float *)dest->data;
+   src_data = (float *)tmp.data;
+   dest_pixel = (float *)dest->data;
 
-    for (y = 0; y < h2; y++) {
-		float *src_pixel = src_data + y * ystep;
-        for (x = 0; x < w2; x++) {
-			for (i = 0; i < comp; i++)
-				dest_pixel[i] = src_pixel[i];
-			dest_pixel += comp;
-			src_pixel += comp2;
-        }
-    }
+   for (y = 0; y < h2; y++) {
+      float *src_pixel = src_data + y * ystep;
+      for (x = 0; x < w2; x++) {
+         for (i = 0; i < comp; i++)
+            dest_pixel[i] = src_pixel[i];
+         dest_pixel += comp;
+         src_pixel += comp2;
+      }
+   }
 
-	m_image_destroy(&tmp);
+   m_image_destroy(&tmp);
 }
 
 static void _bilinear(struct m_image *dest, const struct m_image *src, float dx, float dy, float offset)
 {
-	float *dest_data = (float *)dest->data;
-	int width = dest->width;
-	int height = dest->height;
-	int comp = src->comp;
-	int y, ystep = width * comp;
+   float *dest_data = (float *)dest->data;
+   int width = dest->width;
+   int height = dest->height;
+   int comp = src->comp;
+   int y, ystep = width * comp;
 
-	#pragma omp parallel for schedule(dynamic, 8)
-	for (y = 0; y < height; y++) {
-
-		float *dest_pixel = dest_data + y * ystep; int x;
-        for (x = 0; x < width; x++) {
-			m_image_sub_pixel(src, ((float)x + 0.5f) * dx + offset, ((float)y + 0.5f) * dy + offset, dest_pixel);
-			dest_pixel += comp;
-		}
-	}
+   #pragma omp parallel for schedule(dynamic, 8)
+   for (y = 0; y < height; y++) {
+      float *dest_pixel = dest_data + y * ystep; int x;
+      for (x = 0; x < width; x++) {
+         m_image_sub_pixel(src, ((float)x + 0.5f) * dx + offset, ((float)y + 0.5f) * dy + offset, dest_pixel);
+         dest_pixel += comp;
+      }
+   }
 }
 
 void m_image_resize(struct m_image *dest, const struct m_image *src, int new_width, int new_height)
 {
-	struct m_image tmp = M_IMAGE_IDENTITY();
-	int width = src->width;
-	int height = src->height;
-	int comp = src->comp;
-	float rx = (float)width / (float)new_width;
-	float ry = (float)height / (float)new_height;
+   struct m_image tmp = M_IMAGE_IDENTITY();
+   int width = src->width;
+   int height = src->height;
+   int comp = src->comp;
+   float rx = (float)width / (float)new_width;
+   float ry = (float)height / (float)new_height;
 
-	/* TODO: use pyrdown for large scaling down ? */
+   /* TODO: use pyrdown for large scaling down ? */
 
-	assert(src->size > 0 && src->type == M_FLOAT);
-	m_image_create(dest, M_FLOAT, new_width, new_height, comp);
+   assert(src->size > 0 && src->type == M_FLOAT);
+   m_image_create(dest, M_FLOAT, new_width, new_height, comp);
 
-	if (new_width < width || new_height < height) {
-		float r = M_MAX(rx, ry);
-		int ir = (int)r - 1;
-		if (ir > 0) {
-			m_image_gaussian_blur(&tmp, src, ir, ir);
-			_bilinear(dest, &tmp, rx, ry, -0.5f);
-		}
-		else {
-			_bilinear(dest, src, rx, ry, -0.5f);
-		}
-	}
-	else {
-		_bilinear(dest, src, rx, ry, -0.5f);
-	}
+   if (new_width < width || new_height < height) {
+      float r = M_MAX(rx, ry);
+      int ir = (int)r - 1;
+      if (ir > 0) {
+         m_image_gaussian_blur(&tmp, src, ir, ir);
+         _bilinear(dest, &tmp, rx, ry, -0.5f);
+      }
+      else {
+         _bilinear(dest, src, rx, ry, -0.5f);
+      }
+   }
+   else {
+      _bilinear(dest, src, rx, ry, -0.5f);
+   }
 
-	m_image_destroy(&tmp);
+   m_image_destroy(&tmp);
 }

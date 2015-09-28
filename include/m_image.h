@@ -40,21 +40,32 @@
 
 #include "m_math.h"
 
+#define M_VOID   0
+#define M_BOOL   1
+#define M_BYTE   2
+#define M_UBYTE  3
+#define M_SHORT  4
+#define M_USHORT 5
+#define M_INT    6
+#define M_UINT   7
+#define M_HALF   8
+#define M_FLOAT  9
+#define M_DOUBLE 10
+
 struct m_image
 {
-	void *data;
-	int size;
-	int width;
-	int height;
-	int comp;
-	char type;
+   void *data;
+   int size;
+   int width;
+   int height;
+   int comp;
+   char type;
 };
 
 /* identity, must be used before calling m_image_create */
 #define M_IMAGE_IDENTITY() {0, 0, 0, 0, 0, 0}
 
 #ifndef __OPENCL_VERSION__
-
 /* fully supported types are: M_UBYTE, M_USHORT, M_HALF, M_FLOAT
    partially supported types: M_BYTE, M_SHORT, M_INT, M_UINT (no support for conversion) */
 M_API void m_image_create(struct m_image *image, char type, int width, int height, int comp);
@@ -80,6 +91,6 @@ M_API void m_image_mirror_y(struct m_image *dest, const struct m_image *src);
 
 /* float image only */
 M_API void m_image_sub_pixel(const struct m_image *src, float x, float y, float *result);
-
 #endif
+
 #endif

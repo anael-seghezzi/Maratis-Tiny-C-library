@@ -508,29 +508,29 @@ static uint8_t  Shift[512] = {
 
 static float m_half2float(uint16_t h)
 {
-    union {
-        float flt;
-        uint32_t  num;
-    } out;
+   union {
+      float flt;
+      uint32_t  num;
+   } out;
 
-    int n = h >> 10;
+   int n = h >> 10;
 
-    out.num = Mantissa[  (h & 0x3ff) + Offset[ n ] ] + Exponent[ n ];
-    return out.flt;
+   out.num = Mantissa[ (h & 0x3ff) + Offset[n]] + Exponent[n];
+   return out.flt;
 }
 
 static uint16_t m_float2half(float flt)
 {
-    union {
-        float flt;
-        uint32_t  num;
-    } in;
+   union {
+      float flt;
+      uint32_t  num;
+   } in;
 
-    uint32_t n, j;
+   uint32_t n, j;
 
-    in.flt = flt;
-    n = in.num;
-    j = (n >> 23) & 0x1ff;
+   in.flt = flt;
+   n = in.num;
+   j = (n >> 23) & 0x1ff;
 
-    return (uint16_t) ((uint32_t) Base[ j ] + (( n & 0x007fffff) >> Shift[ j ]));
+   return (uint16_t) ((uint32_t) Base[j] + ((n & 0x007fffff) >> Shift[j]));
 }
