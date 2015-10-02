@@ -14,6 +14,8 @@ Math
 * float array routines (normalization, convolution...)
 * structure tensor field (harris response, flow-field)
 * interpolation (cubic, catmullrom)
+* quaternion (basics, slerp...)
+* matrix (projection, transformation...)
 * 2d routines
 * 3d routines
   * voxeliser (tri-box overlap)
