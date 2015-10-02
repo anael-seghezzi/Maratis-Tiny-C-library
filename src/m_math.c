@@ -27,6 +27,27 @@
 
 #include <m_math.h>
 
+static unsigned int _m_rz = 362436069;
+static unsigned int _m_rw = 521288629;
+
+void m_srand(unsigned int z, unsigned int w)
+{
+   _m_rz = z;
+   _m_rw = w;
+}
+
+unsigned int m_rand(void)
+{
+   _m_rz = 36969 * (_m_rz & 65535) + (_m_rz >> 16);
+   _m_rw = 18000 * (_m_rw & 65535) + (_m_rw >> 16);
+   return (_m_rz << 16) + _m_rw;
+}
+
+float m_randf(void)
+{
+   unsigned int u = m_rand();
+   return (u + 1.0) * 2.328306435454494e-10;
+}
 
 void m_normalize(float *dest, float *src, int size)
 {

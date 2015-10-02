@@ -30,7 +30,6 @@
 #include <string.h>
 #include <memory.h>
 #include <GLFW/glfw3.h>
-#include <../deps/GL/glext.h>
 #include <m_image.h>
 #include <m_color.h>
 

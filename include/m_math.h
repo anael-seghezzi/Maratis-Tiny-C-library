@@ -127,6 +127,11 @@ typedef struct {float x, y, z;} float3; /* float3 (doesn't exist in opencl) */
 #define M_DIV3(dest, A, B) M_DIV2(dest, A, B) (dest).z = (A).z / (B).z;
 #define M_DIV4(dest, A, B) M_DIV3(dest, A, B) (dest).w = (A).w / (B).w;
 
+/* rand (Marsaglia MWC generator) */
+M_API void m_srand(unsigned int z, unsigned int w);
+M_API unsigned int m_rand(void);
+M_API float m_randf(void); /* (0 - 1) range */
+
 /* float array utils */
 M_API void  m_normalize(float *dest, float *src, int size); /* dest = src / norm(src) */
 M_API void  m_normalize_sum(float *dest, float *src, int size); /* dest = src / sum(src) */
