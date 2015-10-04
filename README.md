@@ -16,6 +16,7 @@ Math
 * interpolation (cubic, catmullrom)
 * quaternion (basics, slerp...)
 * matrix (projection, transformation...)
+* random number generator
 * 2d routines
 * 3d routines
   * voxeliser (tri-box overlap)
