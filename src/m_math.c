@@ -95,21 +95,12 @@ float m_squared_distance(float *src1, float *src2, int size)
 
 float m_chi_squared_distance(float *src1, float *src2, int size)
 {
-   float sum1 = 0, sum2 = 0, score; int i;
+   int i;
+   float score = 0;
    for (i = 0; i < size; i++) {
-      sum1 += src1[i];
-      sum2 += src2[i];
-   }
 
-   /* exit */
-   if (sum1 == 0 || sum2 == 0)
-      return 1;
-
-   score = 0;
-   for (i = 0; i < size; i++) {
-      /* normalize */
-      float val1 = src1[i] / sum1;
-      float val2 = src2[i] / sum2;
+      float val1 = src1[i];
+      float val2 = src2[i];
 
       /* chi squared distance */
       if ((val1 + val2) > 0) {
