@@ -133,20 +133,20 @@ M_API unsigned int m_rand(void);
 M_API float m_randf(void); /* (0 - 1) range */
 
 /* float array utils */
-M_API void  m_normalize(float *dest, float *src, int size); /* dest = src / norm(src) */
-M_API void  m_normalize_sum(float *dest, float *src, int size); /* dest = src / sum(src) */
-M_API float m_mean(float *src, int size);
-M_API float m_convolution(float *src1, float *src2, int size); /* a dot product really */
-M_API float m_squared_distance(float *src1, float *src2, int size);
-M_API float m_chi_squared_distance(float *src1, float *src2, int size); /* good at estimating signed hystograms difference */
+M_API void  m_normalize(float *dest, const float *src, int size); /* dest = src / norm(src) */
+M_API void  m_normalize_sum(float *dest, const float *src, int size); /* dest = src / sum(src) */
+M_API float m_mean(const float *src, int size);
+M_API float m_convolution(const float *src1, const float *src2, int size); /* a dot product really */
+M_API float m_squared_distance(const float *src1, const float *src2, int size);
+M_API float m_chi_squared_distance(const float *src1, const float *src2, int size); /* good at estimating signed hystograms difference */
 
 /* convolution kernel */
 M_API void m_gaussian_kernel(float *dest, int size);
 
 /* structure tensor field and harris response */
-M_API void m_sst(float *dest, float *src, int count); /* compute a 3 component smooth struture tensor from a 2 component vector */
-M_API void m_harris_response(float *dest, float *src, int count); /* compute Harris response (1 component) from a 3 component sst */
-M_API void m_tfm(float *dest, float *src, int count); /* compute a 2 component vector from a 3 component sst */
+M_API void m_sst(float *dest, const float *src, int count); /* compute a 3 component smooth struture tensor from a 2 component vector */
+M_API void m_harris_response(float *dest, const float *src, int count); /* compute Harris response (1 component) from a 3 component sst */
+M_API void m_tfm(float *dest, const float *src, int count); /* compute a 2 component vector from a 3 component sst */
 
 /* interpolation */
 M_API float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu);

@@ -49,7 +49,7 @@ float m_randf(void)
    return (u + 1.0) * 2.328306435454494e-10;
 }
 
-void m_normalize(float *dest, float *src, int size)
+void m_normalize(float *dest, const float *src, int size)
 {
    float sum = 0.0f; int i;
    for(i = 0; i < size; i++)
@@ -62,7 +62,7 @@ void m_normalize(float *dest, float *src, int size)
    }
 }
 
-void m_normalize_sum(float *dest, float *src, int size)
+void m_normalize_sum(float *dest, const float *src, int size)
 {
    float sum = 0.0f; int i;
    for(i = 0; i < size; i++)
@@ -75,7 +75,7 @@ void m_normalize_sum(float *dest, float *src, int size)
    }
 }
 
-float m_mean(float *src, int size)
+float m_mean(const float *src, int size)
 {
    float mean = 0; int i;
    for (i = 0; i < size; i++)
@@ -83,7 +83,7 @@ float m_mean(float *src, int size)
    return size > 0 ? mean / (float)size : 0;
 }
 
-float m_squared_distance(float *src1, float *src2, int size)
+float m_squared_distance(const float *src1, const float *src2, int size)
 {
    float score = 0; int i;
    for (i = 0; i < size; i++) {
@@ -93,7 +93,7 @@ float m_squared_distance(float *src1, float *src2, int size)
    return score;
 }
 
-float m_chi_squared_distance(float *src1, float *src2, int size)
+float m_chi_squared_distance(const float *src1, const float *src2, int size)
 {
    int i;
    float score = 0;
@@ -112,7 +112,7 @@ float m_chi_squared_distance(float *src1, float *src2, int size)
    return score * 0.5f;
 }
 
-float m_convolution(float *src1, float *src2, int size)
+float m_convolution(const float *src1, const float *src2, int size)
 {
    float c = 0; int i;
    for (i = 0; i < size; i++)
@@ -151,7 +151,7 @@ void m_gaussian_kernel(float *dest, int size)
    }
 }
 
-void m_sst(float *dest, float *src, int count)
+void m_sst(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
@@ -165,7 +165,7 @@ void m_sst(float *dest, float *src, int count)
    }
 }
 
-void m_harris_response(float *dest, float *src, int count)
+void m_harris_response(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
@@ -178,7 +178,7 @@ void m_harris_response(float *dest, float *src, int count)
    }
 }
 
-void m_tfm(float *dest, float *src, int count)
+void m_tfm(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
