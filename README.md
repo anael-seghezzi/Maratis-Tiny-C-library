@@ -52,7 +52,7 @@ Color conversion
 * sRGB / linear
 
 
-Building the tests (CMake)
+Building the demos (CMake)
 --------------------------
 
 **Unix:**
