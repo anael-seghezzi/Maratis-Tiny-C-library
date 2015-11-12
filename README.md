@@ -3,9 +3,12 @@ Maratis Tiny C library
 
 is a collection of small and efficient math and image processing routines written in C. Some of the code should be compatible with both standard C, OpenCL and CUDA, though GPGPU compatibility is still in progress. In other cases, the code is dependent on memory allocation (malloc/free) and multithreading is handled by OpenMP.
 
-* small
-* free
-* no dependencies
+The library is divided in 5 independent single file (stb style):
+- [m_math.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_math.h)
+- [m_image.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_image.h)
+- [m_raster.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_raster.h)
+- [m_dist.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_dist.h)
+- [m_color.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_color.h)
 
 Math
 ----
@@ -22,20 +25,8 @@ Math
   * voxeliser (tri-box overlap)
   * raytracing (sphere, plane, box, triangle)
 
-Color conversion
-----------------
-
-* RGB, HSV, HSL
-* sRGB / linear
-
-Rasterization
--------------
-
-* triangle with interpolation (perspective correct)
-* basic line, circle and polygon
-
-Image (CPU only)
-----------------
+Image manipulation
+------------------
 
 * ubyte, ushort, int, half, float...
 * copy, conversions, mirror, reframe, rotate...
@@ -43,7 +34,23 @@ Image (CPU only)
 * resizing, pyrdown
 * morphology (floodfill, dilate, erode, thinning...)
 * corner detection (harris, non-maxima suppression)
+
+Rasterization
+-------------
+
+* triangle with interpolation (perspective correct)
+* basic line, circle and polygon
+
+Distance map
+------------
 * distance transform and voronoi
+
+Color conversion
+----------------
+
+* RGB, HSV, HSL
+* sRGB / linear
+
 
 Building the tests (CMake)
 --------------------------
