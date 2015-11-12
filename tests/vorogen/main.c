@@ -27,15 +27,19 @@
 
 /* voronoi genetic algorithm painting */
 
+#define M_MATH_IMPLEMENTATION
+#define M_IMAGE_IMPLEMENTATION
+#define M_DIST_IMPLEMENTATION
+#define M_COLOR_IMPLEMENTATION
+#include <m_math.h>
+#include <m_image.h>
+#include <m_dist.h>
+#include <m_color.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "../test.h"
-#include <m_math.h>
-#include <m_dist.h>
-#include <m_image_filter.h>
-#include <m_image_resize.h>
-#include <m_color.h>
 
 #define POP_COUNT 128
 #define POINT_COUNT 64

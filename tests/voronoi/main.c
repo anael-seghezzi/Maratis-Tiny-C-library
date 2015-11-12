@@ -27,10 +27,14 @@
 
 /* voronoi test */
 
-#include "../test.h"
+#define M_MATH_IMPLEMENTATION
+#define M_IMAGE_IMPLEMENTATION
+#define M_DIST_IMPLEMENTATION
 #include <m_math.h>
+#include <m_image.h>
 #include <m_dist.h>
-#include <m_image_filter.h>
+
+#include "../test.h"
 
 #define POINT_COUNT 64
 #define RANDF ((float)rand() / (float)RAND_MAX)

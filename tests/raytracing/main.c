@@ -27,9 +27,12 @@
 
 /* raytracing test */
 
-#include "../test.h"
+#define M_MATH_IMPLEMENTATION
+#define M_IMAGE_IMPLEMENTATION
 #include <m_math.h>
-#include <m_image_filter.h>
+#include <m_image.h>
+
+#include "../test.h"
 
 #define USE_NOISE /* comment to disable 3d noise (simple sphere raytracing) */
 

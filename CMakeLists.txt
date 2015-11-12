@@ -79,7 +79,6 @@ SET(TINYCTHREAD_LIBRARIES tinycthread)
 
 ## Set up SDK dependencies
 SET(MTCL_INCLUDE_DIR ${MTCL_SOURCE_DIR}/include)
-SET(MTCL_SRC_DIR ${MTCL_SOURCE_DIR}/src)
 
 ## Set up subdirectories...
 ADD_SUBDIRECTORY(tests/3rdparty)

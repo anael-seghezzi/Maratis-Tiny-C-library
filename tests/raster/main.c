@@ -27,9 +27,14 @@
 
 /* software rasterization test */
 
-#include "../test.h"
+#define M_MATH_IMPLEMENTATION
+#define M_IMAGE_IMPLEMENTATION
+#define M_RASTER_IMPLEMENTATION
+#include <m_math.h>
+#include <m_image.h>
 #include <m_raster.h>
-#include <m_image_filter.h>
+
+#include "../test.h"
 
 static struct m_image test_buffer = M_IMAGE_IDENTITY();
 
@@ -74,15 +79,15 @@ void draw(void)
 	/* draw lines */
 	for (i = 0; i < 4; i++) {
 		int i2 = i == 3 ? 0 : i + 1;
-		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+		m_raster_line((float *)test_buffer.data, test_buffer.width, test_buffer.height, test_buffer.comp, &pr[i].x, &pr[i2].x, color);
 	}
 	for (i = 4; i < 8; i++) {
 		int i2 = i == 7 ? 4 : i + 1;
-		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+		m_raster_line((float *)test_buffer.data, test_buffer.width, test_buffer.height, test_buffer.comp, &pr[i].x, &pr[i2].x, color);
 	}
 	for (i = 0; i < 4; i++) {
 		int i2 = i + 4;
-		m_raster_line(&test_buffer, &pr[i], &pr[i2], color);
+		m_raster_line((float *)test_buffer.data, test_buffer.width, test_buffer.height, test_buffer.comp, &pr[i].x, &pr[i2].x, color);
 	}
 	
 	/* add some noise */

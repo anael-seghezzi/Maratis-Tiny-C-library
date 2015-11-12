@@ -30,8 +30,6 @@
 #include <string.h>
 #include <memory.h>
 #include <GLFW/glfw3.h>
-#include <m_image.h>
-#include <m_color.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
