@@ -27,8 +27,6 @@
 /*
    Math with C/OpenCL portability:
    - vector manipulation
-   - float array routines (normalization, convolution...)
-   - structure tensor field (harris response, flow-field)
    - interpolation (cubic, catmullrom)
    - quaternion basics
    - matrix (projection, transformation...)
