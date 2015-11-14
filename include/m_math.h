@@ -63,10 +63,19 @@ extern "C" {
 #define M_DEG_TO_RAD 0.01745329251994329576
 #define M_RAD_TO_DEG 57.29577951308232087679
 
+#ifndef M_MIN
 #define M_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef M_MAX
 #define M_MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
+#ifndef M_ABS
 #define M_ABS(a) (((a) < 0) ? -(a) : (a))
+#endif
+#ifndef M_CLAMP
+#define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
+
 #define M_ISPOWEROFTWO(x) (((x&(x - 1)) == 0) && (x != 0))
 
 /* vector math */
@@ -141,20 +150,6 @@ MMAPI unsigned int m_next_power_of_two(unsigned int x);
 MMAPI void m_srand(unsigned int z, unsigned int w);
 MMAPI unsigned int m_rand(void);
 MMAPI float m_randf(void); /* (0 - 1) range */
-
-/* float utils */
-MMAPI void  m_normalize(float *dest, const float *src, int size); /* dest = src / norm(src) */
-MMAPI void  m_normalize_sum(float *dest, const float *src, int size); /* dest = src / sum(src) */
-MMAPI void  m_gaussian_kernel(float *dest, int size);
-MMAPI float m_mean(const float *src, int size);
-MMAPI float m_convolution(const float *src1, const float *src2, int size); /* a dot product really */
-MMAPI float m_squared_distance(const float *src1, const float *src2, int size);
-MMAPI float m_chi_squared_distance(const float *src1, const float *src2, int size); /* good at estimating signed hystograms difference */
-
-/* structure tensor field and harris response */
-MMAPI void m_sst(float *dest, const float *src, int count); /* compute a 3 component smooth struture tensor from a 2 component vector */
-MMAPI void m_harris_response(float *dest, const float *src, int count); /* compute Harris response (1 component) from a 3 component sst */
-MMAPI void m_tfm(float *dest, const float *src, int count); /* compute a 2 component vector from a 3 component sst */
 
 /* interpolation */
 MMAPI float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu);
@@ -256,162 +251,6 @@ MMAPI float m_randf(void)
 {
    unsigned int u = m_rand();
    return (u + 1.0) * 2.328306435454494e-10;
-}
-
-MMAPI void m_normalize(float *dest, const float *src, int size)
-{
-   float sum = 0.0f; int i;
-   for(i = 0; i < size; i++)
-      sum += src[i] * src[i];
-
-   if (sum > 0.0f) {
-      sum = 1.0f / sqrtf(sum);
-      for(i = 0; i < size; i++)
-         dest[i] = src[i] * sum;
-   }
-}
-
-MMAPI void m_normalize_sum(float *dest, const float *src, int size)
-{
-   float sum = 0.0f; int i;
-   for(i = 0; i < size; i++)
-      sum += src[i];
-
-   if (sum > 0.0f) {
-      sum = 1.0f / sum;
-      for(i = 0; i < size; i++)
-         dest[i] = src[i] * sum;
-   }
-}
-
-MMAPI float m_mean(const float *src, int size)
-{
-   float mean = 0; int i;
-   for (i = 0; i < size; i++)
-      mean += (*src++);
-   return size > 0 ? mean / (float)size : 0;
-}
-
-MMAPI float m_squared_distance(const float *src1, const float *src2, int size)
-{
-   float score = 0; int i;
-   for (i = 0; i < size; i++) {
-      float x = src2[i] - src1[i];
-      score += x * x;
-   }
-   return score;
-}
-
-MMAPI float m_chi_squared_distance(const float *src1, const float *src2, int size)
-{
-   int i;
-   float score = 0;
-   for (i = 0; i < size; i++) {
-
-      float val1 = src1[i];
-      float val2 = src2[i];
-
-      /* chi squared distance */
-      if ((val1 + val2) > 0) {
-         float x = val2 - val1;
-         score += (x * x) / (val1 + val2);
-      }
-   }
-
-   return score * 0.5f;
-}
-
-MMAPI float m_convolution(const float *src1, const float *src2, int size)
-{
-   float c = 0; int i;
-   for (i = 0; i < size; i++)
-      c += src1[i] * src2[i];
-   return c;
-}
-
-MMAPI void m_gaussian_kernel(float *dest, int size)
-{
-   if(size == 3) {
-      dest[0] = 0.25f;
-      dest[1] = 0.50f;
-      dest[2] = 0.25f;
-   }
-   else {
-
-      float *k = dest;
-      float sigma = 1.6f;
-      float rs, s2;
-      int radius = (size - 1) / 2;
-      int r;
-      
-      s2 = 1.0f / expf(sigma * sigma * 2.25f);
-      rs = sigma / (float)radius;
-
-      /* compute gaussian kernel */
-      for(r = -radius; r <= radius; r++) {
-         float x = M_ABS(r * rs);
-         float v = (1.0f / expf(x * x)) - s2;
-         *k = v;
-         k++;
-      }
-
-      /* normalize */
-      m_normalize_sum(dest, dest, size);
-   }
-}
-
-MMAPI void m_sst(float *dest, const float *src, int count)
-{
-   int i;
-   for (i = 0; i < count; i++) {
-      float dx = src[0];
-      float dy = src[1];
-      dest[0] = dx*dx;
-      dest[1] = dy*dy;
-      dest[2] = dx*dy;
-      src += 2;
-      dest += 3;
-   }
-}
-
-MMAPI void m_harris_response(float *dest, const float *src, int count)
-{
-   int i;
-   for (i = 0; i < count; i++) {
-      float dx2 = src[0];
-      float dy2 = src[1];
-      float dxy = src[2];
-      *dest = (dx2 * dy2 - dxy * dxy) / (dx2 + dy2 + 1e-8f);
-      src += 3;
-      dest++;
-   }
-}
-
-MMAPI void m_tfm(float *dest, const float *src, int count)
-{
-   int i;
-   for (i = 0; i < count; i++) {
-
-      if (src[0] < src[1]) {
-         float dx2 = src[0];
-         float dy2 = src[1];
-         float dxy = src[2];
-         float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
-         dest[0] = dx2 - lambda;
-         dest[1] = dxy;
-      }
-      else {
-         float dy2 = src[0];
-         float dx2 = src[1];
-         float dxy = src[2];
-         float lambda = 0.5f * (dy2 + dx2 + sqrtf((dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy)));
-         dest[0] = dxy;
-         dest[1] = dx2 - lambda;
-      }
-
-      src += 3;
-      dest += 2;
-   }
 }
 
 MMAPI float m_interpolation_cubic(float y0, float y1, float y2, float y3, float mu)
@@ -1172,12 +1011,14 @@ MMAPI float m_3d_ray_triangle_intersection(float3 *ray_origin, float3 *ray_direc
 /* Thanks to David Hunt for finding a ">="-bug!         */
 /********************************************************/
 
-#define FINDMINMAX(x0, x1, x2, min, max)\
+#ifndef M_FIND_MIN_MAX_3
+#define M_FIND_MIN_MAX_3(x0, x1, x2, min, max)\
    min = max = x0;\
    if (x1 < min) min=x1;\
    if (x1 > max) max=x1;\
    if (x2 < min) min=x2;\
    if (x2 > max) max=x2;
+#endif
 
 static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
 {
@@ -1194,14 +1035,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
 }
 
 /*======================== X-tests ========================*/
-#define AXISTEST_X01(a, b, fa, fb)\
+#define _M_AXISTEST_X01(a, b, fa, fb)\
    p0 = a*v0.y - b*v0.z;\
    p2 = a*v2.y - b*v2.z;\
    if(p0<p2) {min=p0; max=p2;} else {min=p2; max=p0;}\
    rad = fa * boxhalfsize->y + fb * boxhalfsize->z;\
    if(min>rad || max<-rad) return 0;
 
-#define AXISTEST_X2(a, b, fa, fb)\
+#define _M_AXISTEST_X2(a, b, fa, fb)\
    p0 = a*v0.y - b*v0.z;\
    p1 = a*v1.y - b*v1.z;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1209,14 +1050,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
    if(min>rad || max<-rad) return 0;
 
 /*======================== Y-tests ========================*/
-#define AXISTEST_Y02(a, b, fa, fb)\
+#define _M_AXISTEST_Y02(a, b, fa, fb)\
    p0 = -a*v0.x + b*v0.z;\
    p2 = -a*v2.x + b*v2.z;\
    if(p0<p2) {min=p0; max=p2;} else {min=p2; max=p0;}\
    rad = fa * boxhalfsize->x + fb * boxhalfsize->z;\
    if(min>rad || max<-rad) return 0;
 
-#define AXISTEST_Y1(a, b, fa, fb)\
+#define _M_AXISTEST_Y1(a, b, fa, fb)\
    p0 = -a*v0.x + b*v0.z;\
    p1 = -a*v1.x + b*v1.z;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1224,14 +1065,14 @@ static int _m_plane_box_overlap(float3 *normal, float3 *vert, float3 *maxbox)
    if(min>rad || max<-rad) return 0;
 
 /*======================== Z-tests ========================*/
-#define AXISTEST_Z12(a, b, fa, fb)\
+#define _M_AXISTEST_Z12(a, b, fa, fb)\
    p1 = a*v1.x - b*v1.y;\
    p2 = a*v2.x - b*v2.y;\
    if(p2<p1) {min=p2; max=p1;} else {min=p1; max=p2;}\
    rad = fa * boxhalfsize->x + fb * boxhalfsize->y;\
    if(min>rad || max<-rad) return 0;
 
-#define AXISTEST_Z0(a, b, fa, fb)\
+#define _M_AXISTEST_Z0(a, b, fa, fb)\
    p0 = a*v0.x - b*v0.y;\
    p1 = a*v1.x - b*v1.y;\
    if(p0<p1) {min=p0; max=p1;} else {min=p1; max=p0;}\
@@ -1268,23 +1109,23 @@ MMAPI int m_3d_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *v
    fex = M_ABS(e0.x);
    fey = M_ABS(e0.y);
    fez = M_ABS(e0.z);
-   AXISTEST_X01(e0.z, e0.y, fez, fey);
-   AXISTEST_Y02(e0.z, e0.x, fez, fex);
-   AXISTEST_Z12(e0.y, e0.x, fey, fex);
+   _M_AXISTEST_X01(e0.z, e0.y, fez, fey);
+   _M_AXISTEST_Y02(e0.z, e0.x, fez, fex);
+   _M_AXISTEST_Z12(e0.y, e0.x, fey, fex);
 
    fex = M_ABS(e1.x);
    fey = M_ABS(e1.y);
    fez = M_ABS(e1.z);
-   AXISTEST_X01(e1.z, e1.y, fez, fey);
-   AXISTEST_Y02(e1.z, e1.x, fez, fex);
-   AXISTEST_Z0(e1.y, e1.x, fey, fex);
+   _M_AXISTEST_X01(e1.z, e1.y, fez, fey);
+   _M_AXISTEST_Y02(e1.z, e1.x, fez, fex);
+   _M_AXISTEST_Z0(e1.y, e1.x, fey, fex);
 
    fex = M_ABS(e2.x);
    fey = M_ABS(e2.y);
    fez = M_ABS(e2.z);
-   AXISTEST_X2(e2.z, e2.y, fez, fey);
-   AXISTEST_Y1(e2.z, e2.x, fez, fex);
-   AXISTEST_Z12(e2.y, e2.x, fey, fex);
+   _M_AXISTEST_X2(e2.z, e2.y, fez, fey);
+   _M_AXISTEST_Y1(e2.z, e2.x, fez, fex);
+   _M_AXISTEST_Z12(e2.y, e2.x, fey, fex);
 
    /* Bullet 1: */
    /*  first test overlap in the {x,y,z}-directions */
@@ -1293,15 +1134,15 @@ MMAPI int m_3d_tri_box_overlap(float3 *boxcenter, float3 *boxhalfsize, float3 *v
    /*  the triangle against the AABB */
 
    /* test in X-direction */
-   FINDMINMAX(v0.x, v1.x, v2.x, min, max);
+   M_FIND_MIN_MAX_3(v0.x, v1.x, v2.x, min, max);
    if (min > boxhalfsize->x || max < -boxhalfsize->x) return 0;
 
    /* test in Y-direction */
-   FINDMINMAX(v0.y, v1.y, v2.y, min, max);
+   M_FIND_MIN_MAX_3(v0.y, v1.y, v2.y, min, max);
    if (min > boxhalfsize->y || max < -boxhalfsize->y) return 0;
 
    /* test in Z-direction */
-   FINDMINMAX(v0.z, v1.z, v2.z, min, max);
+   M_FIND_MIN_MAX_3(v0.z, v1.z, v2.z, min, max);
    if (min > boxhalfsize->z || max < -boxhalfsize->z) return 0;
 
    /* Bullet 2: */

@@ -196,7 +196,7 @@ static void mutate(struct test_point *pts, int size, struct m_image *src)
     		pts[i].col.x = src_pixel[0];
     		pts[i].col.y = src_pixel[1];
     		pts[i].col.z = src_pixel[2];
-    		m_color_RGB_to_HSL(&pts[i].col, &pts[i].col);
+    		m_color_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
         }
         
         if (RANDF < p) {
@@ -245,13 +245,13 @@ static void gen(struct test_point *pts, struct m_image *src)
 		pts[i].col.x = src_pixel[0];
 		pts[i].col.y = src_pixel[1];
 		pts[i].col.z = src_pixel[2];
-		m_color_RGB_to_HSL(&pts[i].col, &pts[i].col);
+		m_color_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
 	} 
 }
 
 static float get_originality(int id)
 {
-    struct test_point *ip = population + id;
+    struct test_point *ip = population[id];
     float diff = 0;
     int i;
     

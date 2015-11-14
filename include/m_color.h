@@ -67,12 +67,12 @@ MCAPI void m_color_HSL_to_RGB(const float *src, float *dest);
 
 #include <math.h>
 
-#ifndef M_MATH_VERSION
-
+#ifndef M_MIN
 #define M_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef M_MAX
 #define M_MAX(a, b) (((a) > (b)) ? (a) : (b))
-
-#endif /* M_MATH_VERSION */
+#endif
 
 MCAPI void m_color_linear_to_sRGB(const float *src, float *dest, int size)
 {
@@ -210,7 +210,7 @@ MCAPI void m_color_RGB_to_HSL(const float *src, float *dest)
    }
 
    if(r == max)
-      h = fmod(((g - b) / delta), 6.0f);
+      h = fmodf(((g - b) / delta), 6.0f);
    else if(g == max)
       h = ((b - r) / delta) + 2.0f;
    else
@@ -219,7 +219,7 @@ MCAPI void m_color_RGB_to_HSL(const float *src, float *dest)
    h *= 60.0f;
    if (h < 0) h += 360;
     
-   s = delta / (1.0f - fabs(2.0f * l - 1.0f));
+   s = delta / (1.0f - fabsf(2.0f * l - 1.0f));
    
    dest[0] = h;
    dest[1] = s;
@@ -238,9 +238,9 @@ MCAPI void m_color_HSL_to_RGB(const float *src, float *dest)
       return;
    }
    
-   c = (1.0f - fabs(2.0f * l - 1.0f)) * s;
+   c = (1.0f - fabsf(2.0f * l - 1.0f)) * s;
    m = 1.0f * (l - 0.5f * c);
-   x = c * (1.0f - fabs(fmod(h / 60.0f, 2) - 1.0f));
+   x = c * (1.0f - fabsf(fmodf(h / 60.0f, 2) - 1.0f));
 
    if (h >= 0.0f && h < 60.0f) {
       dest[0] = c + m;

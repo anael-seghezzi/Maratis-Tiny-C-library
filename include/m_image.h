@@ -111,7 +111,6 @@ MIAPI void m_image_half_to_float(struct m_image *dest, const struct m_image *src
 MIAPI void m_image_float_to_ubyte(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_float_to_ushort(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_float_to_half(struct m_image *dest, const struct m_image *src);
-MIAPI void m_image_float_to_srgb(struct m_image *dest, const struct m_image *src);
 
 MIAPI void m_image_copy(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int x, int y, int w, int h);
@@ -127,17 +126,27 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src);
 MIAPI float    m_half2float(uint16_t h);
 MIAPI uint16_t m_float2half(float flt);
 
+/* raw processing */
+MIAPI void  m_gaussian_kernel(float *dest, int size);
+MIAPI void  m_sst(float *dest, const float *src, int count);
+MIAPI void  m_harris_response(float *dest, const float *src, int count);
+MIAPI void  m_tfm(float *dest, const float *src, int count);
+MIAPI void  m_normalize(float *dest, const float *src, int size); /* dest = src / norm(src) */
+MIAPI void  m_normalize_sum(float *dest, const float *src, int size); /* dest = src / sum(src) */
+MIAPI float m_mean(const float *src, int size);
+MIAPI float m_squared_distance(const float *src1, const float *src2, int size);
+MIAPI float m_convolution(const float *src1, const float *src2, int size); /* a dot product really */
+MIAPI float m_chi_squared_distance(const float *src1, const float *src2, int size); /* good at estimating signed hystograms difference */
+
 /* conversion to 1 component (float image only) */
 MIAPI void m_image_grey(struct m_image *dest, const struct m_image *src); /* from RGB src */
 MIAPI void m_image_max(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_max_abs(struct m_image *dest, const struct m_image *src);
 
-/* convolution (float image only) */
+/* convolutions (float image only) */
 /* if alpha channel, src image must be pre-multiplied */
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
 MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* vertical */
-
-/* blur */
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, int dx, int dy);
 
 /* edge and corner (float 1 component image only) */
@@ -184,29 +193,24 @@ MIAPI void m_image_resize(struct m_image *dest, const struct m_image *src, int n
 #include <math.h>
 #include <assert.h>
 
+#ifndef M_SAFE_FREE
 #define M_SAFE_FREE(p) {if (p) {free(p); (p) = NULL;}}
+#endif
 
-#ifndef M_MATH_VERSION
-
+#ifndef M_MIN
 #define M_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef M_MAX
 #define M_MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
+#ifndef M_ABS
 #define M_ABS(a) (((a) < 0) ? -(a) : (a))
+#endif
+#ifndef M_CLAMP
+#define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#endif
 
-static void m_normalize_sum(float *dest, const float *src, int size)
-{
-   float sum = 0.0f; int i;
-   for(i = 0; i < size; i++)
-      sum += src[i];
-
-   if (sum > 0.0f) {
-      sum = 1.0f / sum;
-      for(i = 0; i < size; i++)
-         dest[i] = src[i] * sum;
-   }
-}
-
-static void m_gaussian_kernel(float *dest, int size)
+MIAPI void m_gaussian_kernel(float *dest, int size)
 {
    if(size == 3) {
       dest[0] = 0.25f;
@@ -218,6 +222,7 @@ static void m_gaussian_kernel(float *dest, int size)
       float *k = dest;
       float sigma = 1.6f;
       float rs, s2;
+      float sum = 0.0f;
       int radius = (size - 1) / 2;
       int r;
       
@@ -229,15 +234,20 @@ static void m_gaussian_kernel(float *dest, int size)
          float x = fabsf(r * rs);
          float v = (1.0f / expf(x * x)) - s2;
          *k = v;
+         sum += v;
          k++;
       }
 
       /* normalize */
-      m_normalize_sum(dest, dest, size);
+      if (sum > 0.0f) {
+         float isum = 1.0f / sum;
+         for (r = 0; r < size; r++)
+            dest[r] *= isum;
+      }
    }
 }
 
-static void m_sst(float *dest, const float *src, int count)
+MIAPI void m_sst(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
@@ -251,7 +261,7 @@ static void m_sst(float *dest, const float *src, int count)
    }
 }
 
-static void m_harris_response(float *dest, const float *src, int count)
+MIAPI void m_harris_response(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
@@ -264,7 +274,7 @@ static void m_harris_response(float *dest, const float *src, int count)
    }
 }
 
-static void m_tfm(float *dest, const float *src, int count)
+MIAPI void m_tfm(float *dest, const float *src, int count)
 {
    int i;
    for (i = 0; i < count; i++) {
@@ -291,7 +301,76 @@ static void m_tfm(float *dest, const float *src, int count)
    }
 }
 
-#endif /* M_MATH_VERSION */
+MIAPI float m_chi_squared_distance(const float *src1, const float *src2, int size)
+{
+   int i;
+   float score = 0;
+   for (i = 0; i < size; i++) {
+
+      float val1 = src1[i];
+      float val2 = src2[i];
+
+      /* chi squared distance */
+      if ((val1 + val2) > 0) {
+         float x = val2 - val1;
+         score += (x * x) / (val1 + val2);
+      }
+   }
+
+   return score * 0.5f;
+}
+
+MIAPI float m_convolution(const float *src1, const float *src2, int size)
+{
+   float c = 0; int i;
+   for (i = 0; i < size; i++)
+      c += src1[i] * src2[i];
+   return c;
+}
+
+MIAPI void m_normalize(float *dest, const float *src, int size)
+{
+   float sum = 0.0f; int i;
+   for(i = 0; i < size; i++)
+      sum += src[i] * src[i];
+
+   if (sum > 0.0f) {
+      sum = 1.0f / sqrtf(sum);
+      for(i = 0; i < size; i++)
+         dest[i] = src[i] * sum;
+   }
+}
+
+MIAPI void m_normalize_sum(float *dest, const float *src, int size)
+{
+   float sum = 0.0f; int i;
+   for(i = 0; i < size; i++)
+      sum += src[i];
+
+   if (sum > 0.0f) {
+      sum = 1.0f / sum;
+      for(i = 0; i < size; i++)
+         dest[i] = src[i] * sum;
+   }
+}
+
+MIAPI float m_mean(const float *src, int size)
+{
+   float mean = 0; int i;
+   for (i = 0; i < size; i++)
+      mean += (*src++);
+   return size > 0 ? mean / (float)size : 0;
+}
+
+MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
+{
+   float score = 0; int i;
+   for (i = 0; i < size; i++) {
+      float x = src2[i] - src1[i];
+      score += x * x;
+   }
+   return score;
+}
 
 /* m_half2float / m_float2half :
    a big thanks to Marti Maria Saguer for allowing the use of this code
@@ -300,7 +379,7 @@ static void m_tfm(float *dest, const float *src, int count)
 /* This code is inspired in the paper "Fast Half Float Conversions"
    by Jeroen van der Zijp */
 
-uint32_t _m_mantissa[2048] = {
+static uint32_t _m_mantissa[2048] = {
 0x00000000, 0x33800000, 0x34000000, 0x34400000, 0x34800000, 0x34a00000,
 0x34c00000, 0x34e00000, 0x35000000, 0x35100000, 0x35200000, 0x35300000,
 0x35400000, 0x35500000, 0x35600000, 0x35700000, 0x35800000, 0x35880000,
@@ -645,7 +724,7 @@ uint32_t _m_mantissa[2048] = {
 0x387fc000, 0x387fe000
 };
 
-uint16_t _m_offset[64] = {
+static uint16_t _m_offset[64] = {
 0x0000, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400,
 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400,
 0x0400, 0x0400, 0x0400, 0x0400, 0x0400, 0x0400,
@@ -659,7 +738,7 @@ uint16_t _m_offset[64] = {
 0x0400, 0x0400, 0x0400, 0x0400
 };
 
-uint32_t _m_exponent[64] = {
+static uint32_t _m_exponent[64] = {
 0x00000000, 0x00800000, 0x01000000, 0x01800000, 0x02000000, 0x02800000,
 0x03000000, 0x03800000, 0x04000000, 0x04800000, 0x05000000, 0x05800000,
 0x06000000, 0x06800000, 0x07000000, 0x07800000, 0x08000000, 0x08800000,
@@ -673,7 +752,7 @@ uint32_t _m_exponent[64] = {
 0x8e000000, 0x8e800000, 0x8f000000, 0xc7800000
 };
 
-uint16_t _m_base[512] = {
+static uint16_t _m_base[512] = {
 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -728,7 +807,7 @@ uint16_t _m_base[512] = {
 0xfc00, 0xfc00
 };
 
-uint8_t  _m_shift[512] = {
+static uint8_t  _m_shift[512] = {
 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
@@ -799,143 +878,6 @@ MIAPI uint16_t m_float2half(float flt)
 
    return (uint16_t) ((uint32_t) _m_base[j] + ((n & 0x007fffff) >> _m_shift[j]));
 }
-
-/*
-for (i = 0; i < 4096; i++)
-   _src[i] = ((float)i + 0.5f) / 4095.0f; 
-m_color_linear_to_sRGB(_src, _dst, 4096);
-for (i = 0; i < 4096; i++)
-   _m_srgb_table[i] = (int)(_dst[i] * 255.0f + 0.5f); */
-uint8_t _m_srgb_table[4096] = {
-0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 14, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 
-22, 22, 23, 23, 24, 24, 24, 25, 25, 26, 26, 26, 27, 27, 28, 28, 28, 29, 29, 29, 30, 30, 30, 31, 31, 31, 32, 32, 32, 33, 33, 33, 
-34, 34, 34, 35, 35, 35, 35, 36, 36, 36, 37, 37, 37, 37, 38, 38, 38, 39, 39, 39, 39, 40, 40, 40, 40, 41, 41, 41, 41, 42, 42, 42, 
-42, 43, 43, 43, 43, 44, 44, 44, 44, 45, 45, 45, 45, 45, 46, 46, 46, 46, 47, 47, 47, 47, 47, 48, 48, 48, 48, 49, 49, 49, 49, 49, 
-50, 50, 50, 50, 50, 51, 51, 51, 51, 51, 52, 52, 52, 52, 52, 53, 53, 53, 53, 53, 54, 54, 54, 54, 54, 54, 55, 55, 55, 55, 55, 56, 
-56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58, 58, 59, 59, 59, 59, 59, 59, 60, 60, 60, 60, 60, 60, 61, 61, 61, 61, 
-61, 61, 62, 62, 62, 62, 62, 62, 63, 63, 63, 63, 63, 63, 63, 64, 64, 64, 64, 64, 64, 65, 65, 65, 65, 65, 65, 65, 66, 66, 66, 66, 
-66, 66, 67, 67, 67, 67, 67, 67, 67, 68, 68, 68, 68, 68, 68, 68, 69, 69, 69, 69, 69, 69, 69, 70, 70, 70, 70, 70, 70, 70, 71, 71, 
-71, 71, 71, 71, 71, 71, 72, 72, 72, 72, 72, 72, 72, 73, 73, 73, 73, 73, 73, 73, 73, 74, 74, 74, 74, 74, 74, 74, 75, 75, 75, 75, 
-75, 75, 75, 75, 76, 76, 76, 76, 76, 76, 76, 76, 77, 77, 77, 77, 77, 77, 77, 77, 78, 78, 78, 78, 78, 78, 78, 78, 79, 79, 79, 79, 
-79, 79, 79, 79, 80, 80, 80, 80, 80, 80, 80, 80, 80, 81, 81, 81, 81, 81, 81, 81, 81, 82, 82, 82, 82, 82, 82, 82, 82, 82, 83, 83, 
-83, 83, 83, 83, 83, 83, 83, 84, 84, 84, 84, 84, 84, 84, 84, 84, 85, 85, 85, 85, 85, 85, 85, 85, 85, 86, 86, 86, 86, 86, 86, 86, 
-86, 86, 87, 87, 87, 87, 87, 87, 87, 87, 87, 88, 88, 88, 88, 88, 88, 88, 88, 88, 89, 89, 89, 89, 89, 89, 89, 89, 89, 89, 90, 90, 
-90, 90, 90, 90, 90, 90, 90, 90, 91, 91, 91, 91, 91, 91, 91, 91, 91, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 93, 93, 93, 93, 93, 
-93, 93, 93, 93, 93, 94, 94, 94, 94, 94, 94, 94, 94, 94, 94, 95, 95, 95, 95, 95, 95, 95, 95, 95, 95, 95, 96, 96, 96, 96, 96, 96, 
-96, 96, 96, 96, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 99, 99, 99, 99, 99, 99, 
-99, 99, 99, 99, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 101, 102, 102, 102, 102, 102, 102, 
-102, 102, 102, 102, 102, 102, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 105, 105, 105, 
-105, 105, 105, 105, 105, 105, 105, 105, 106, 106, 106, 106, 106, 106, 106, 106, 106, 106, 106, 106, 107, 107, 107, 107, 107, 107, 107, 107, 107, 107, 107, 107, 
-108, 108, 108, 108, 108, 108, 108, 108, 108, 108, 108, 108, 109, 109, 109, 109, 109, 109, 109, 109, 109, 109, 109, 109, 110, 110, 110, 110, 110, 110, 110, 110, 
-110, 110, 110, 110, 110, 111, 111, 111, 111, 111, 111, 111, 111, 111, 111, 111, 111, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 113, 113, 
-113, 113, 113, 113, 113, 113, 113, 113, 113, 113, 113, 114, 114, 114, 114, 114, 114, 114, 114, 114, 114, 114, 114, 114, 115, 115, 115, 115, 115, 115, 115, 115, 
-115, 115, 115, 115, 115, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 118, 
-118, 118, 118, 118, 118, 118, 118, 118, 118, 118, 118, 118, 118, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119, 119, 120, 120, 120, 120, 120, 120, 
-120, 120, 120, 120, 120, 120, 120, 120, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 122, 122, 122, 122, 122, 122, 122, 122, 122, 122, 
-122, 122, 122, 122, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 
-124, 125, 125, 125, 125, 125, 125, 125, 125, 125, 125, 125, 125, 125, 125, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 127, 127, 
-127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 129, 129, 129, 129, 129, 
-129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 129, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 131, 131, 131, 131, 131, 131, 
-131, 131, 131, 131, 131, 131, 131, 131, 131, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 132, 133, 133, 133, 133, 133, 133, 133, 
-133, 133, 133, 133, 133, 133, 133, 133, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 134, 135, 135, 135, 135, 135, 135, 135, 135, 
-135, 135, 135, 135, 135, 135, 135, 135, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 136, 137, 137, 137, 137, 137, 137, 137, 137, 
-137, 137, 137, 137, 137, 137, 137, 137, 137, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 138, 139, 139, 139, 139, 139, 139, 139, 
-139, 139, 139, 139, 139, 139, 139, 139, 139, 139, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 140, 141, 141, 141, 141, 141, 141, 
-141, 141, 141, 141, 141, 141, 141, 141, 141, 141, 141, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 142, 143, 143, 143, 143, 
-143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 145, 
-145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 145, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 146, 
-146, 146, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 147, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 
-148, 148, 148, 148, 148, 148, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 149, 150, 150, 150, 150, 150, 150, 150, 150, 
-150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 151, 152, 152, 152, 
-152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 152, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 153, 
-153, 153, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 155, 155, 155, 155, 155, 155, 155, 155, 155, 155, 155, 
-155, 155, 155, 155, 155, 155, 155, 155, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 156, 157, 157, 157, 157, 157, 
-157, 157, 157, 157, 157, 157, 157, 157, 157, 157, 157, 157, 157, 157, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 158, 
-158, 158, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 159, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 
-160, 160, 160, 160, 160, 160, 160, 160, 160, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 161, 162, 162, 162, 
-162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 162, 163, 163, 163, 163, 163, 163, 163, 163, 163, 163, 163, 163, 163, 163, 
-163, 163, 163, 163, 163, 163, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 165, 165, 165, 165, 165, 165, 
-165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 165, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 166, 
-166, 166, 166, 166, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 167, 168, 168, 168, 168, 168, 168, 168, 
-168, 168, 168, 168, 168, 168, 168, 168, 168, 168, 168, 168, 168, 168, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 169, 
-169, 169, 169, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 170, 171, 171, 171, 171, 171, 171, 171, 
-171, 171, 171, 171, 171, 171, 171, 171, 171, 171, 171, 171, 171, 171, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 172, 
-172, 172, 172, 172, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 173, 174, 174, 174, 174, 174, 174, 
-174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 175, 
-175, 175, 175, 175, 175, 175, 175, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 176, 177, 177, 177, 
-177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 177, 178, 178, 178, 178, 178, 178, 178, 178, 178, 178, 178, 178, 
-178, 178, 178, 178, 178, 178, 178, 178, 178, 178, 178, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 179, 
-179, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 181, 181, 181, 181, 181, 181, 181, 
-181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 181, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 182, 
-182, 182, 182, 182, 182, 182, 182, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 183, 184, 
-184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 184, 185, 185, 185, 185, 185, 185, 185, 185, 185, 
-185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 185, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 186, 
-186, 186, 186, 186, 186, 186, 186, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 188, 
-188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 189, 189, 189, 189, 189, 189, 189, 189, 
-189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 190, 
-190, 190, 190, 190, 190, 190, 190, 190, 190, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 191, 
-191, 191, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 193, 193, 193, 193, 193, 
-193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 193, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 
-194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 194, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 195, 
-195, 195, 195, 195, 195, 195, 195, 195, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 196, 
-196, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 197, 198, 198, 198, 198, 198, 
-198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 198, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 
-199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 199, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 
-200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 201, 
-201, 201, 201, 201, 201, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 202, 
-203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 203, 204, 204, 204, 204, 204, 
-204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 204, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 
-205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 205, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 
-206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 206, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 207, 
-207, 207, 207, 207, 207, 207, 207, 207, 207, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 208, 
-208, 208, 208, 208, 208, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 209, 
-209, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 211, 211, 211, 
-211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 211, 212, 212, 212, 212, 212, 212, 
-212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 212, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 
-213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 213, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 
-214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 214, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 
-215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 215, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 
-216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 216, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 217, 
-217, 217, 217, 217, 217, 217, 217, 217, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 218, 
-218, 218, 218, 218, 218, 218, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 
-219, 219, 219, 219, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 
-220, 220, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 221, 
-222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 222, 223, 223, 
-223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 223, 224, 224, 224, 
-224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 224, 225, 225, 225, 225, 
-225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 225, 226, 226, 226, 226, 226, 
-226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 227, 227, 227, 227, 227, 227, 
-227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 227, 228, 228, 228, 228, 228, 228, 228, 
-228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 228, 229, 229, 229, 229, 229, 229, 229, 
-229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 229, 230, 230, 230, 230, 230, 230, 230, 230, 
-230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 230, 231, 231, 231, 231, 231, 231, 231, 231, 
-231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 231, 232, 232, 232, 232, 232, 232, 232, 232, 
-232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 232, 233, 233, 233, 233, 233, 233, 233, 
-233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 233, 234, 234, 234, 234, 234, 234, 234, 
-234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 234, 235, 235, 235, 235, 235, 235, 
-235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 235, 236, 236, 236, 236, 236, 236, 
-236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 236, 237, 237, 237, 237, 237, 
-237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 237, 238, 238, 238, 
-238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 238, 239, 239, 
-239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 239, 240, 
-240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 
-240, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 
-241, 241, 241, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 242, 
-242, 242, 242, 242, 242, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 243, 
-243, 243, 243, 243, 243, 243, 243, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 
-244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 
-245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 245, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 
-246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 246, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 
-247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 247, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 
-248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 
-249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 249, 250, 250, 250, 250, 250, 250, 250, 
-250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 251, 251, 251, 
-251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 251, 
-252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 
-252, 252, 252, 252, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 
-253, 253, 253, 253, 253, 253, 253, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 
-254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
-};
 
 MIAPI void m_image_create(struct m_image *image, char type, int width, int height, int comp)
 {
@@ -1012,7 +954,7 @@ MIAPI void m_image_copy(struct m_image *dest, const struct m_image *src)
 
 MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *src, int x, int y, int w, int h)
 {
-   #define COPY_SUBI(T)\
+   #define _M_COPY_SUBI(T)\
    {\
       T *sData = (T *)src->data + (miny * src->width + minx) * comp;\
       T *dData = (T *)dest->data;\
@@ -1040,24 +982,26 @@ MIAPI void m_image_copy_sub_image(struct m_image *dest, const struct m_image *sr
    {
    case M_BYTE:
    case M_UBYTE:
-      COPY_SUBI(char);
+      _M_COPY_SUBI(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      COPY_SUBI(short);
+      _M_COPY_SUBI(short);
       break;
    case M_INT:
    case M_UINT:
-      COPY_SUBI(int);
+      _M_COPY_SUBI(int);
       break;
    case M_FLOAT:
-      COPY_SUBI(float);
+      _M_COPY_SUBI(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_COPY_SUBI
 }
 
 MIAPI void m_image_ubyte_to_float(struct m_image *dest, const struct m_image *src)
@@ -1150,26 +1094,9 @@ MIAPI void m_image_float_to_half(struct m_image *dest, const struct m_image *src
       dest_data[i] = m_float2half(src_data[i]);
 }
 
-MIAPI void m_image_float_to_srgb(struct m_image *dest, const struct m_image *src)
-{
-   float *src_data;
-   uint8_t *dest_data;
-   int i;
-
-   m_image_create(dest, M_UBYTE, src->width, src->height, src->comp);
-
-   src_data = (float *)src->data;
-   dest_data = (uint8_t *)dest->data;
-   for (i = 0; i < src->size; i++) {
-      float f = M_CLAMP(src_data[i], 0, 1);
-      short x = (short)(f * 4095);
-      dest_data[i] = _m_srgb_table[x];
-   }
-}
-
 MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image *src, int c)
 {
-   #define EXTRACT(T)\
+   #define _M_EXTRACT(T)\
    {\
       T *dest_pixel = (T *)dest->data;\
       T *src_pixel = (T *)src->data;\
@@ -1197,29 +1124,31 @@ MIAPI void m_image_extract_component(struct m_image *dest, const struct m_image 
    {
    case M_BYTE:
    case M_UBYTE:
-      EXTRACT(char);
+      _M_EXTRACT(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      EXTRACT(short);
+      _M_EXTRACT(short);
       break;
    case M_INT:
    case M_UINT:
-      EXTRACT(int);
+      _M_EXTRACT(int);
       break;
    case M_FLOAT:
-      EXTRACT(float);
+      _M_EXTRACT(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_EXTRACT
 }
 
 MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int left, int top, int right, int bottom)
 {
-   #define REFRAME(T)\
+   #define _M_REFRAME(T)\
    {\
       T *src_data;\
       T *src_pixel;\
@@ -1258,19 +1187,19 @@ MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int 
          switch(src->type) {
          case M_BYTE:
          case M_UBYTE:
-            REFRAME(char);
+            _M_REFRAME(char);
             break;
          case M_SHORT:
          case M_USHORT:
          case M_HALF:
-            REFRAME(short);
+            _M_REFRAME(short);
             break;
          case M_INT:
          case M_UINT:
-            REFRAME(int);
+            _M_REFRAME(int);
             break;
          case M_FLOAT:
-            REFRAME(float);
+            _M_REFRAME(float);
             break;
          default:
             assert(0);
@@ -1284,11 +1213,13 @@ MIAPI void m_image_reframe(struct m_image *dest, const struct m_image *src, int 
    else {
       m_image_copy(dest, src);
    }
+
+   #undef _M_REFRAME
 }
 
 MIAPI void m_image_rotate_left(struct m_image *dest, const struct m_image *src)
 {
-   #define ROTATE_L(T)\
+   #define _M_ROTATE_L(T)\
    {\
       T *src_data = (T *)src->data;\
       T *dest_pixel = (T *)dest->data;\
@@ -1312,29 +1243,31 @@ MIAPI void m_image_rotate_left(struct m_image *dest, const struct m_image *src)
    {
    case M_BYTE:
    case M_UBYTE:
-      ROTATE_L(char);
+      _M_ROTATE_L(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      ROTATE_L(short);
+      _M_ROTATE_L(short);
       break;
    case M_INT:
    case M_UINT:
-      ROTATE_L(int);
+      _M_ROTATE_L(int);
       break;
    case M_FLOAT:
-      ROTATE_L(float);
+      _M_ROTATE_L(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_ROTATE_L
 }
 
 MIAPI void m_image_rotate_right(struct m_image *dest, const struct m_image *src)
 {
-   #define ROTATE_R(T)\
+   #define _M_ROTATE_R(T)\
    {\
       T *src_data = (T *)src->data;\
       T *dest_pixel = (T *)dest->data;\
@@ -1358,29 +1291,31 @@ MIAPI void m_image_rotate_right(struct m_image *dest, const struct m_image *src)
    {
    case M_BYTE:
    case M_UBYTE:
-      ROTATE_R(char);
+      _M_ROTATE_R(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      ROTATE_R(short);
+      _M_ROTATE_R(short);
       break;
    case M_INT:
    case M_UINT:
-      ROTATE_R(int);
+      _M_ROTATE_R(int);
       break;
    case M_FLOAT:
-      ROTATE_R(float);
+      _M_ROTATE_R(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_ROTATE_R
 }
 
 MIAPI void m_image_rotate_180(struct m_image *dest, const struct m_image *src)
 {
-   #define ROTATE_180(T)\
+   #define _M_ROTATE_180(T)\
    {\
       T *src_data = (T *)src->data;\
       T *dest_pixel = (T *)dest->data;\
@@ -1404,29 +1339,31 @@ MIAPI void m_image_rotate_180(struct m_image *dest, const struct m_image *src)
    {
    case M_BYTE:
    case M_UBYTE:
-      ROTATE_180(char);
+      _M_ROTATE_180(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      ROTATE_180(short);
+      _M_ROTATE_180(short);
       break;
    case M_INT:
    case M_UINT:
-      ROTATE_180(int);
+      _M_ROTATE_180(int);
       break;
    case M_FLOAT:
-      ROTATE_180(float);
+      _M_ROTATE_180(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_ROTATE_180
 }
 
 MIAPI void m_image_mirror_x(struct m_image *dest, const struct m_image *src)
 {
-   #define MIRROR_X(T)\
+   #define _M_MIRROR_X(T)\
    {\
       T *src_data = (T *)src->data;\
       T *dest_pixel = (T *)dest->data;\
@@ -1450,29 +1387,31 @@ MIAPI void m_image_mirror_x(struct m_image *dest, const struct m_image *src)
    {
    case M_BYTE:
    case M_UBYTE:
-      MIRROR_X(char);
+      _M_MIRROR_X(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      MIRROR_X(short);
+      _M_MIRROR_X(short);
       break;
    case M_INT:
    case M_UINT:
-      MIRROR_X(int);
+      _M_MIRROR_X(int);
       break;
    case M_FLOAT:
-      MIRROR_X(float);
+      _M_MIRROR_X(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_MIRROR_X
 }
 
 MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
 {
-   #define MIRROR_Y(T)\
+   #define _M_MIRROR_Y(T)\
    {\
       T *src_data = (T *)src->data;\
       T *dest_pixel = (T *)dest->data;\
@@ -1496,24 +1435,26 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
    {
    case M_BYTE:
    case M_UBYTE:
-      MIRROR_Y(char);
+      _M_MIRROR_Y(char);
       break;
    case M_SHORT:
    case M_USHORT:
    case M_HALF:
-      MIRROR_Y(short);
+      _M_MIRROR_Y(short);
       break;
    case M_INT:
    case M_UINT:
-      MIRROR_Y(int);
+      _M_MIRROR_Y(int);
       break;
    case M_FLOAT:
-      MIRROR_Y(float);
+      _M_MIRROR_Y(float);
       break;
    default:
       assert(0);
       break;
    }
+
+   #undef _M_MIRROR_Y
 }
 
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size)
@@ -1803,15 +1744,15 @@ MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, int r
    m_image_destroy(&tmp2);
 }
 
-#define WRITE_PIXEL(dest, w, h, x, y, v) {*(dest + w * y + x) = v;}
-#define PUSH_PIXEL(x2, y2) if((stack_i+3) < stack_size && _test_pixel(data, w, h, x2, y2, ref)) {\
+#define _M_WRITE_PIXEL(dest, w, h, x, y, v) {*(dest + w * y + x) = v;}
+#define _M_PUSH_PIXEL(x2, y2) if((stack_i+3) < stack_size && _m_test_pixel(data, w, h, x2, y2, ref)) {\
    stack_i+=2;\
    stack[stack_i] = (unsigned short)x2;\
    stack[stack_i+1] = (unsigned short)y2;\
-   WRITE_PIXEL(data, w, h, x2, y2, value);\
+   _M_WRITE_PIXEL(data, w, h, x2, y2, value);\
 }
 
-static int _test_pixel(unsigned char *src, int w, int h, int x, int y, unsigned char ref)
+static int _m_test_pixel(unsigned char *src, int w, int h, int x, int y, unsigned char ref)
 {
    if (! (x >= 0 && x < w && y >= 0 && y < h))
       return 0;
@@ -1827,12 +1768,12 @@ MIAPI int m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char
 
    assert(dest->size > 0 && dest->type == M_UBYTE);
 
-   if(! _test_pixel(data, w, h, x, y, ref))
+   if(! _m_test_pixel(data, w, h, x, y, ref))
       return 0;
 
    stack[0] = (unsigned short)x;
    stack[1] = (unsigned short)y;
-   WRITE_PIXEL(data, w, h, x, y, value);
+   _M_WRITE_PIXEL(data, w, h, x, y, value);
 
    while (stack_i >= 0) {
 
@@ -1840,10 +1781,10 @@ MIAPI int m_image_floodfill_4x(struct m_image *dest, int x, int y, unsigned char
       y = stack[stack_i+1];
       stack_i-=2;
 
-      PUSH_PIXEL(x + 1, y)
-      PUSH_PIXEL(x - 1, y)
-      PUSH_PIXEL(x, y + 1)
-      PUSH_PIXEL(x, y - 1)
+      _M_PUSH_PIXEL(x + 1, y)
+      _M_PUSH_PIXEL(x - 1, y)
+      _M_PUSH_PIXEL(x, y + 1)
+      _M_PUSH_PIXEL(x, y - 1)
    }
 
    return 1;
@@ -1858,12 +1799,12 @@ MIAPI int m_image_floodfill_8x(struct m_image *dest, int x, int y, unsigned char
 
    assert(dest->size > 0 && dest->type == M_UBYTE);
 
-   if(! _test_pixel(data, w, h, x, y, ref))
+   if(! _m_test_pixel(data, w, h, x, y, ref))
       return 0;
 
    stack[0] = (unsigned short)x;
    stack[1] = (unsigned short)y;
-   WRITE_PIXEL(data, w, h, x, y, value);
+   _M_WRITE_PIXEL(data, w, h, x, y, value);
 
    while (stack_i >= 0) {
 
@@ -1871,14 +1812,14 @@ MIAPI int m_image_floodfill_8x(struct m_image *dest, int x, int y, unsigned char
       y = stack[stack_i+1];
       stack_i-=2;
 
-      PUSH_PIXEL(x + 1, y)
-      PUSH_PIXEL(x - 1, y)
-      PUSH_PIXEL(x, y + 1)
-      PUSH_PIXEL(x, y - 1)
-      PUSH_PIXEL(x + 1, y + 1)
-      PUSH_PIXEL(x + 1, y - 1)
-      PUSH_PIXEL(x - 1, y + 1)
-      PUSH_PIXEL(x - 1, y - 1)
+      _M_PUSH_PIXEL(x + 1, y)
+      _M_PUSH_PIXEL(x - 1, y)
+      _M_PUSH_PIXEL(x, y + 1)
+      _M_PUSH_PIXEL(x, y - 1)
+      _M_PUSH_PIXEL(x + 1, y + 1)
+      _M_PUSH_PIXEL(x + 1, y - 1)
+      _M_PUSH_PIXEL(x - 1, y + 1)
+      _M_PUSH_PIXEL(x - 1, y - 1)
    }
 
    return 1;
@@ -1946,10 +1887,10 @@ MIAPI void m_image_edge_4x(struct m_image *dest, const struct m_image *src, unsi
    Thins the image using Rosenfeld's parallel thinning algorithm.
 */
 
-/* Direction masks:
+/* Direction _m_masks:
    N    S    W    E
 */
-int masks[] = {0200, 0002, 0040, 0010};
+static int _m_masks[] = {0200, 0002, 0040, 0010};
 
 /* True if pixel neighbor map indicates the pixel is 8-simple and
    not an end point and thus can be deleted.  The neighborhood
@@ -1961,7 +1902,7 @@ int masks[] = {0200, 0002, 0040, 0010};
             d e f
             g h i
 */
-unsigned char deleteMap[512] = {
+static unsigned char _m_delete_map[512] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -2032,7 +1973,7 @@ MIAPI void m_image_thin(struct m_image *dest)
 
       for (i=0; i<4; i++) {
 
-         m = masks[i];
+         m = _m_masks[i];
          
          /* Build initial previous scan buffer */
          p = ip[0][0] != 0;
@@ -2051,7 +1992,7 @@ MIAPI void m_image_thin(struct m_image *dest)
                p = ((p<<1)&0666) | ((q<<3)&0110) | (ip[y+1][x+1] != 0);
                qb[x] = (unsigned char)p;
 
-               if (((p&m) == 0) && deleteMap[p]) {
+               if (((p&m) == 0) && _m_delete_map[p]) {
                   if (ip[y][x] != 0) {
                      count++;
                      ip[y][x] = 0;
@@ -2061,7 +2002,7 @@ MIAPI void m_image_thin(struct m_image *dest)
             
             /* Process right edge pixel */
             p = (p<<1)&0666;
-            if ((p&m) == 0 && deleteMap[p]) {
+            if ((p&m) == 0 && _m_delete_map[p]) {
                if (ip[y][xsize-1] != 0) {
                   count++;
                   ip[y][xsize-1] = 0;
@@ -2073,7 +2014,7 @@ MIAPI void m_image_thin(struct m_image *dest)
          for (x=0; x<xsize; x++) {
             q = qb[x];
             p = ((p<<1)&0666) | ((q<<3)&0110);
-            if ((p&m) == 0 && deleteMap[p]) {
+            if ((p&m) == 0 && _m_delete_map[p]) {
                if (ip[ysize-1][x] != 0) {
                   count++;
                   ip[ysize-1][x] = 0;

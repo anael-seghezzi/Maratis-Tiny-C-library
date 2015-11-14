@@ -65,23 +65,26 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
 
 #ifdef M_RASTER_IMPLEMENTATION
 
-#define IS_IN_FRAME(x, y, w, h) (x >= 0 && x < w && y >= 0 && y < h)
+#ifndef M_MIN
+#define M_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef M_MAX
+#define M_MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef M_ABS
+#define M_ABS(a) (((a) < 0) ? -(a) : (a))
+#endif
 
-#define FINDMINMAX(x0, x1, x2, min, max)\
+#define _M_IS_IN_FRAME(x, y, w, h) (x >= 0 && x < w && y >= 0 && y < h)
+
+#ifndef M_FIND_MIN_MAX_3
+#define M_FIND_MIN_MAX_3(x0, x1, x2, min, max)\
    min = max = x0;\
    if (x1 < min) min=x1;\
    if (x1 > max) max=x1;\
    if (x2 < min) min=x2;\
    if (x2 > max) max=x2;
-
-#ifndef M_MATH_VERSION
-
-#define M_MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define M_MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define M_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-#define M_ABS(a) (((a) < 0) ? -(a) : (a))
-
-#endif M_MATH_VERSION
+#endif
 
 MRAPI void m_raster_triangle_bbox_att4(float *dest, int width, int height, int minx, int miny, int maxx, int maxy, float *v0, float *v1, float *v2, float *a0, float *a1, float *a2)
 {
@@ -160,8 +163,8 @@ MRAPI void m_raster_triangle_att4(float *dest, int width, int height, float *v0,
       return;
 
    /* bounding box */
-   FINDMINMAX((int)v0[0], (int)v1[0], (int)v2[0], minx, maxx);
-   FINDMINMAX((int)v0[1], (int)v1[1], (int)v2[1], miny, maxy);
+   M_FIND_MIN_MAX_3((int)v0[0], (int)v1[0], (int)v2[0], minx, maxx);
+   M_FIND_MIN_MAX_3((int)v0[1], (int)v1[1], (int)v2[1], miny, maxy);
    minx = M_MAX(minx, 0);
    miny = M_MAX(miny, 0);
    maxx = M_MIN(maxx, w - 1);
@@ -185,7 +188,7 @@ MRAPI void m_raster_line(float *dest, int width, int height, int comp, float *p0
 
    while (1) {
 
-      if (IS_IN_FRAME(x0, y0, w, h)) { /* safe, but should be taken out of the loop for speed (clipping ?) */
+      if (_M_IS_IN_FRAME(x0, y0, w, h)) { /* safe, but should be taken out of the loop for speed (clipping ?) */
          float *pixel = data + (y0 * w + x0) * comp; int c;
          for (c = 0; c < comp; c++)
             pixel[c] = color[c];
@@ -203,11 +206,11 @@ MRAPI void m_raster_line(float *dest, int width, int height, int comp, float *p0
 // Midpoint Circle Algorithm : http://en[3]ikipedia.org/wiki/Midpoint_circle_algorithm
 MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *p, float r, float *color)
 {
-   #define PIXEL(px, py)\
+   #define _M_CIRCLE_PIXEL(px, py)\
    {\
       int _x = px;\
       int _y = py;\
-      if (IS_IN_FRAME(_x, _y, w, h)) {\
+      if (_M_IS_IN_FRAME(_x, _y, w, h)) {\
          float *pixel = data + (_y * w + _x) * comp; int c;\
          for (c = 0; c < comp; c++)\
             pixel[c] = color[c];\
@@ -221,27 +224,29 @@ MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *
    int w = width;
    int h = height;
    int x = radius, y = 0;
-   int radiusError = 1 - x;
+   int radius_error = 1 - x;
  
    while (x >= y) {
 
-      PIXEL( x + x0,  y + y0)
-      PIXEL( y + x0,  x + y0)
-      PIXEL(-x + x0,  y + y0)
-      PIXEL(-y + x0,  x + y0)
-      PIXEL(-x + x0, -y + y0)
-      PIXEL(-y + x0, -x + y0)
-      PIXEL( x + x0, -y + y0)
-      PIXEL( y + x0, -x + y0)
+      _M_CIRCLE_PIXEL( x + x0,  y + y0)
+      _M_CIRCLE_PIXEL( y + x0,  x + y0)
+      _M_CIRCLE_PIXEL(-x + x0,  y + y0)
+      _M_CIRCLE_PIXEL(-y + x0,  x + y0)
+      _M_CIRCLE_PIXEL(-x + x0, -y + y0)
+      _M_CIRCLE_PIXEL(-y + x0, -x + y0)
+      _M_CIRCLE_PIXEL( x + x0, -y + y0)
+      _M_CIRCLE_PIXEL( y + x0, -x + y0)
       y++;
         
-      if (radiusError < 0)
-         radiusError += 2 * y + 1;
+      if (radius_error < 0)
+         radius_error += 2 * y + 1;
       else {
          x--;
-         radiusError += 2 * (y - x + 1);
+         radius_error += 2 * (y - x + 1);
       }
    }
+
+   #undef _M_CIRCLE_PIXEL
 }
 
 /* adapted from : http://alienryderflex.com/polygon_fill/
@@ -268,17 +273,17 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
       float min[2], max[2]; int i;
 
       min[0] = point[0];
-	  max[0] = point[0];
-	  min[1] = point[1];
-	  max[1] = point[1];
-	  point += 2;
+	   max[0] = point[0];
+	   min[1] = point[1];
+	   max[1] = point[1];
+	   point += 2;
 
       for (i = 1; i < count; i++) {
          min[0] = M_MIN(min[0], point[0]);
-		 min[1] = M_MIN(min[1], point[1]);
+         min[1] = M_MIN(min[1], point[1]);
          max[0] = M_MAX(max[0], point[0]);
-		 max[1] = M_MAX(max[1], point[1]);
-		 point += 2;
+         max[1] = M_MAX(max[1], point[1]);
+         point += 2;
       }
 
       IMAGE_LEFT =  M_MAX(0, (int)min[0]);
@@ -295,14 +300,14 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
       int nodes = 0;
       int i, j;
 
-	  pointi = points;
-	  pointj = points + ((count - 1) * 2);
+      pointi = points;
+      pointj = points + ((count - 1) * 2);
 
       for (i = 0; i < count; i++) {
          if ((pointi[1] < (float)pixelY && pointj[1] >= (float)pixelY) ||
              (pointj[1] < (float)pixelY && pointi[1] >= (float)pixelY))
             nodeX[nodes++] = (int)(pointi[0] + (pixelY - pointi[1]) / (pointj[1] - pointi[1]) * (pointj[0] - pointi[0]));
-		 pointj = pointi;
+         pointj = pointi;
          pointi += 2;
       }
 
@@ -324,7 +329,7 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
          if (nodeX[i + 1] > IMAGE_LEFT) {
 
             float *pixel;
-            nodeX[i] = M_MAX(nodeX[i], IMAGE_LEFT);
+            nodeX[i]     = M_MAX(nodeX[i], IMAGE_LEFT);
             nodeX[i + 1] = M_MIN(nodeX[i + 1], IMAGE_RIGHT);
             pixel = data + (pixelY * w + nodeX[i]) * comp;
 
