@@ -14,8 +14,6 @@ Math
 ----
 
 * vector manipulation
-* float array routines (normalization, convolution...)
-* structure tensor field (harris response, flow-field)
 * interpolation (cubic, catmullrom)
 * quaternion (basics, slerp...)
 * matrix (projection, transformation...)
