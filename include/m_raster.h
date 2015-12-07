@@ -47,6 +47,9 @@ extern "C" {
 #define MRAPI extern
 #endif
 
+/* inverse bilinear interpolation */
+MRAPI void m_raster_inv_bilerp(float *dest, float x, float y, const float *v0, const float *v1, const float *v2, const float *v3);
+
 /* triangle with 4 components attributes (float 4 vertices and attributes) */
 MRAPI void m_raster_triangle_bbox_att4(float *dest, int width, int height, int minx, int miny, int maxx, int maxy, float *v0, float *v1, float *v2, float *a0, float *a1, float *a2);
 MRAPI void m_raster_triangle_att4(float *dest, int width, int height, float *v0, float *v1, float *v2, float *a0, float *a1, float *a2);
@@ -85,6 +88,47 @@ MRAPI void m_raster_polygon(float *dest, int width, int height, int comp, float 
    if (x2 < min) min=x2;\
    if (x2 > max) max=x2;
 #endif
+
+MRAPI void m_raster_inv_bilerp(float *dest, float x, float y, const float *v0, const float *v1, const float *v2, const float *v3)
+{
+   float vec1[2], vec2[2], vecp1[2], vecp2[2];
+   float vA, vC, vB;
+   float s, is, t, am2bpc, tdenom_x, tdenom_y;
+
+   vec1[0] = v0[0] - v2[0];
+   vec1[1] = v0[1] - v2[1];
+   vec2[0] = v1[0] - v3[0];
+   vec2[1] = v1[1] - v3[1];
+
+   vecp1[0] = v0[0] - x;
+   vecp1[1] = v0[1] - y;
+   vecp2[0] = v1[0] - x;
+   vecp2[1] = v1[1] - y;
+
+   vA = vecp1[0] * vec1[1] - vecp1[1] * vec1[0];
+   vC = vecp2[0] * vec2[1] - vecp2[1] * vec2[0];
+   vB = ((vecp1[0] * vec2[1] - vecp1[1] * vec2[0]) +
+         (vecp2[0] * vec1[1] - vecp2[1] * vec1[0])) * 0.5f;   
+   
+   am2bpc = vA - 2.0f * vB + vC;
+
+   if (am2bpc > -0.001f && am2bpc < 0.001f)
+      s = vA / (vA - vC);
+   else
+      s = ((vA - vB) + sqrtf(vB * vB - vA * vC)) / am2bpc;
+
+   is = 1.0f - s;
+   tdenom_x = is * vec1[0] + s * vec2[0];
+   tdenom_y = is * vec1[1] + s * vec2[1];
+
+   if (M_ABS(tdenom_x) > M_ABS(tdenom_y))
+      t = (is * vecp1[0] + s * vecp2[0]) / tdenom_x;
+   else
+      t = (is * vecp1[1] + s * vecp2[1]) / tdenom_y;
+
+   dest[0] = is;
+   dest[1] = t;
+}
 
 MRAPI void m_raster_triangle_bbox_att4(float *dest, int width, int height, int minx, int miny, int maxx, int maxy, float *v0, float *v1, float *v2, float *a0, float *a1, float *a2)
 {
