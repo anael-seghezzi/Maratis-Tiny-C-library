@@ -112,7 +112,7 @@ MRAPI void m_raster_inv_bilerp(float *dest, float x, float y, const float *v0, c
    
    am2bpc = vA - 2.0f * vB + vC;
 
-   if (am2bpc > -0.001f && am2bpc < 0.001f)
+   if (am2bpc > -0.0001f && am2bpc < 0.0001f)
       s = vA / (vA - vC);
    else
       s = ((vA - vB) + sqrtf(vB * vB - vA * vC)) / am2bpc;

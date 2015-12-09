@@ -143,6 +143,9 @@ MIAPI void m_image_grey(struct m_image *dest, const struct m_image *src); /* fro
 MIAPI void m_image_max(struct m_image *dest, const struct m_image *src);
 MIAPI void m_image_max_abs(struct m_image *dest, const struct m_image *src);
 
+/* summed area table (also called "integral image") */
+MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src);
+
 /* convolutions (float image only) */
 /* if alpha channel, src image must be pre-multiplied */
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size); /* horizontal */
@@ -1455,6 +1458,48 @@ MIAPI void m_image_mirror_y(struct m_image *dest, const struct m_image *src)
    }
 
    #undef _M_MIRROR_Y
+}
+
+MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src)
+{
+   float *src_pixel;
+   float *dest_pixel;
+   int width = src->width;
+   int height = src->height;
+   int comp = src->comp;
+   int x, y, c;
+
+   assert(src->size > 0 && src->type == M_FLOAT);
+   if (dest != src)
+      m_image_copy(dest, src);
+
+   /* horiz sum */
+   dest_pixel = (float *)dest->data;
+   for (y = 0; y < height; y++) {
+      float *prev_pixel = dest_pixel;
+      dest_pixel += comp;
+
+      for (x = 1; x < width; x++) {
+         for (c = 0; c < comp; c++)
+            dest_pixel[c] += prev_pixel[c];
+
+         prev_pixel = dest_pixel;
+         dest_pixel += comp;
+      }
+   }
+
+   /* vertical sum */
+   src_pixel = (float *)dest->data;
+   dest_pixel = (float *)dest->data + width * comp;
+   for (y = 1; y < height; y++)
+   for (x = 0; x < width; x++) {
+
+      for (c = 0; c < comp; c++)
+         dest_pixel[c] += src_pixel[c];
+
+      src_pixel += comp;
+      dest_pixel += comp;
+   }
 }
 
 MIAPI void m_image_convolution_h(struct m_image *dest, const struct m_image *src, float *kernel, int size)
