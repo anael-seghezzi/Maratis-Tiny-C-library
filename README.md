@@ -49,6 +49,20 @@ Color conversion
 * RGB, HSV, HSL
 * sRGB / linear
 
+Asm.js demos
+------------
+
+* [m_raster] (http://maratis3d.org/js/m_raster/m_raster.html)
+* [m_voronoi] (http://maratis3d.org/js/m_voronoi/m_voronoi.html)
+* [m_raytracing] (http://maratis3d.org/js/m_raytracing/m_raytracing.html)
+
+What was made with it
+---------------------
+
+* Back on Earth - Ludum Dare 34 Compo
+
+ [![BackOnEarth](http://maratis3d.com/download/ludum34/scm.png)](http://maratis3d.com/download/ludum34/b/web_player.html)
+
 
 Building the demos (CMake)
 --------------------------
@@ -84,13 +98,6 @@ or:
 **Emscripten:**
 
     ./emcc -s LEGACY_GL_EMULATION=1 -s USE_GLFW=3
-
-Asm.js demos
-------------
-
-* [m_raster] (http://maratis3d.org/js/m_raster/m_raster.html)
-* [m_voronoi] (http://maratis3d.org/js/m_voronoi/m_voronoi.html)
-* [m_raytracing] (http://maratis3d.org/js/m_raytracing/m_raytracing.html)
 
 License (zlib)
 --------------
