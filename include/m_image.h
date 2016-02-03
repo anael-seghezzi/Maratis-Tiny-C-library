@@ -2178,6 +2178,9 @@ MIAPI void m_image_sub_pixel(const struct m_image *src, float x, float y, float 
    iy = (int)y;
    fx = x - (float)ix;
    fy = y - (float)iy;
+   fx = M_MAX(fx, 0);
+   fy = M_MAX(fy, 0);
+   
    ix = M_CLAMP(ix, 0, wm);
    iy = M_CLAMP(iy, 0, hm);
    ix2 = ix + 1;
