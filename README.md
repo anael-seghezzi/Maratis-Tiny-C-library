@@ -56,12 +56,12 @@ Asm.js demos
 * [m_voronoi] (http://maratis3d.org/js/m_voronoi/m_voronoi.html)
 * [m_raytracing] (http://maratis3d.org/js/m_raytracing/m_raytracing.html)
 
-What was made with it
----------------------
+Games / Demos
+-------------
 
-* Back on Earth - Ludum Dare 34 Compo
+* Back on Earth - Ludum Dare 34 Compo (with source)
 
- [![BackOnEarth](http://maratis3d.com/download/ludum34/scm.png)](http://maratis3d.com/download/ludum34/b/web_player.html)
+ [![BackOnEarth](http://maratis3d.com/download/ludum34/scm.png)](http://ludumdare.com/compo/ludum-dare-34/?action=preview&uid=45582)
 
 
 Building the demos (CMake)
