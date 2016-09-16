@@ -846,7 +846,7 @@ MMAPI int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direc
    float3 tmin, tmax;
    float3 tnear, tfar;
    float tnx, tny, tfy;
-   float _in, _out;
+   float in0, out0;
 
    idir.x = 1.0f / ray_direction->x;
    idir.y = 1.0f / ray_direction->y;
@@ -865,12 +865,12 @@ MMAPI int m_3d_ray_box_intersection_in_out(float3 *ray_origin, float3 *ray_direc
    tny = M_MAX(tnear.y, tnear.z);
    tfy = M_MIN(tfar.y, tfar.z);
 
-   _in = M_MAX(tnx, tny);
-   _out = M_MIN(tfar.x, tfy);
+   in0 = M_MAX(tnx, tny);
+   out0 = M_MIN(tfar.x, tfy);
     
-   if (_out > 0.0f && _in < _out) {
-      *in = _in;
-      *out = _out;
+   if (out0 > 0.0f && in0 < out0) {
+      *in = in0;
+      *out = out0;
       return 1;
    }
    return 0;
