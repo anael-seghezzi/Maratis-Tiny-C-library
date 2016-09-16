@@ -250,10 +250,10 @@ MRAPI void m_raster_circle(float *dest, int width, int height, int comp, float *
 {
    #define M_CIRCLE_PIXEL(px, py)\
    {\
-      int x0 = px;\
-      int y0 = py;\
-      if (x0 > -1 && y0 > -1 && x0 < w && y0 < h) {\
-         float *pixel = data + (y0 * w + x0) * comp; int c;\
+      int x2 = px;\
+      int y2 = py;\
+      if (x2 > -1 && y2 > -1 && x2 < w && y2 < h) {\
+         float *pixel = data + (y2 * w + x2) * comp; int c;\
          for (c = 0; c < comp; c++)\
             pixel[c] = color[c];\
       }\
