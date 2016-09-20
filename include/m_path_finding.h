@@ -51,7 +51,7 @@ struct m_pf_point
 };
 
 /* floodfill a score map from destination (x, y)
-   the ori with this two values: 0 = ground, UINT_MAX = wall
+   the input map is filled with this two values: 0 = ground, UINT_MAX = wall
    *stack should be at least of size (w * h) */
 MPFAPI void m_pf_floodfill(unsigned int *map, int w, int h, int x, int y, struct m_pf_point *stack);
 
