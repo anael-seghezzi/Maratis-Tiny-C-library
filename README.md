@@ -9,6 +9,7 @@ The library is divided in 5 independent single file (stb style):
 - [m_raster.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_raster.h)
 - [m_dist.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_dist.h)
 - [m_color.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_color.h)
+- [m_path_finding.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_path_finding.h)
 
 Math
 ----
@@ -48,6 +49,11 @@ Color conversion
 
 * RGB, HSV, HSL
 * sRGB / linear
+
+Path finding
+------------
+
+* path finding on regular grid (floodfill-based)
 
 Asm.js demos
 ------------
