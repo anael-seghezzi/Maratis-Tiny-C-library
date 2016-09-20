@@ -47,7 +47,7 @@
 
 struct m_pf_point
 {
-	unsigned short x, y;
+   unsigned short x, y;
 };
 
 /* floodfill a score map from destination (x, y)
@@ -84,61 +84,61 @@ MPFAPI void m_pf_floodfill(unsigned int *map, int w, int h, int x, int y, struct
 
       x = stack[stack_c].x;
       y = stack[stack_c].y;
-	  i = map[w * y + x] + 1;
+      i = map[w * y + x] + 1;
       stack_c++;
 
-	  if (y > 0)
-		  M_PF_PUSH_PIXEL(x, y - 1)
-	  if (x > 0)
-		  M_PF_PUSH_PIXEL(x - 1, y)
+      if (y > 0)
+         M_PF_PUSH_PIXEL(x, y - 1)
+      if (x > 0)
+         M_PF_PUSH_PIXEL(x - 1, y)
       if (x < (w - 1))
-		  M_PF_PUSH_PIXEL(x + 1, y)
+         M_PF_PUSH_PIXEL(x + 1, y)
       if (y < (h - 1))
-		  M_PF_PUSH_PIXEL(x, y + 1)
+         M_PF_PUSH_PIXEL(x, y + 1)
    }
 }
 
 MPFAPI int m_pf_backtrace(struct m_pf_point *dest, const unsigned int *map, int w, int h, int x, int y)
 {
-	const unsigned int *p = map + (y * w + x);
-	int i, s = w * h;
+   const unsigned int *p = map + (y * w + x);
+   int i, s = w * h;
 
-	if (*p == 0 || *p == UINT_MAX)
-		return 0;
+   if (*p == 0 || *p == UINT_MAX)
+      return 0;
 
-	for (i = 0; i < s; i++) {
+   for (i = 0; i < s; i++) {
 
-		int minx, miny;
-		int maxx, maxy;
-		int xi, yi;
-		int min = UINT_MAX;
+      int minx, miny;
+      int maxx, maxy;
+      int xi, yi;
+      int min = UINT_MAX;
 
-		minx = (x - 1) < 0 ? 0 : (x - 1);
-		miny = (y - 1) < 0 ? 0 : (y - 1);
-		maxx = (x + 2) > w ? w : (x + 2);
-		maxy = (y + 2) > h ? h : (y + 2);
+      minx = (x - 1) < 0 ? 0 : (x - 1);
+      miny = (y - 1) < 0 ? 0 : (y - 1);
+      maxx = (x + 2) > w ? w : (x + 2);
+      maxy = (y + 2) > h ? h : (y + 2);
 
-		for (yi = miny; yi < maxy; yi++) {
-			p = map + (yi * w + minx);
-			for (xi = minx; xi < maxx; xi++) {
+      for (yi = miny; yi < maxy; yi++) {
+         p = map + (yi * w + minx);
+         for (xi = minx; xi < maxx; xi++) {
 
-				if (*p < min) {
-					min = *p;
-					y = yi;
-					x = xi;
-				}
-				p++;
-			}
-		}
+            if (*p < min) {
+               min = *p;
+               y = yi;
+               x = xi;
+            }
+            p++;
+         }
+      }
 
-		dest[i].x = x;
-		dest[i].y = y;
+      dest[i].x = x;
+      dest[i].y = y;
 
-		if (min == 1)
-			return i + 1;
-	}
+      if (min == 1)
+         return i + 1;
+   }
 
-	return 0;
+   return 0;
 }
 
 #undef M_PF_PUSH_PIXEL
