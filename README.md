@@ -3,7 +3,7 @@ Maratis Tiny C library
 
 is a collection of small and efficient math and image processing routines written in ANSI C with no dependencies.
 
-The library is divided in 5 independent single file (stb style):
+The library is divided in independent single files (stb style):
 - [m_math.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_math.h)
 - [m_image.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_image.h)
 - [m_raster.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_raster.h)
