@@ -4,12 +4,12 @@ Maratis Tiny C library
 is a collection of small and efficient math and image processing routines written in ANSI C with no dependencies.
 
 The library is divided in independent single files (stb style):
-- [m_math.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_math.h)
-- [m_image.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_image.h)
-- [m_raster.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_raster.h)
-- [m_dist.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_dist.h)
-- [m_color.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_color.h)
-- [m_path_finding.h] (https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_path_finding.h)
+- [m_math.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_math.h)
+- [m_image.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_image.h)
+- [m_raster.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_raster.h)
+- [m_dist.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_dist.h)
+- [m_color.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_color.h)
+- [m_path_finding.h](https://github.com/anael-seghezzi/Maratis-Tiny-C-library/blob/master/include/m_path_finding.h)
 
 Math
 ----
@@ -58,9 +58,9 @@ Path finding
 Asm.js demos
 ------------
 
-* [m_raster] (http://maratis3d.org/js/m_raster/m_raster.html)
-* [m_voronoi] (http://maratis3d.org/js/m_voronoi/m_voronoi.html)
-* [m_raytracing] (http://maratis3d.org/js/m_raytracing/m_raytracing.html)
+* [m_raster](http://maratis3d.org/js/m_raster/m_raster.html)
+* [m_voronoi](http://maratis3d.org/js/m_voronoi/m_voronoi.html)
+* [m_raytracing](http://maratis3d.org/js/m_raytracing/m_raytracing.html)
 
 Games / Demos
 -------------
