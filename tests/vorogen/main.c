@@ -30,11 +30,9 @@
 #define M_MATH_IMPLEMENTATION
 #define M_IMAGE_IMPLEMENTATION
 #define M_DIST_IMPLEMENTATION
-#define M_COLOR_IMPLEMENTATION
 #include <m_math.h>
 #include <m_image.h>
 #include <m_dist.h>
-#include <m_color.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -196,7 +194,7 @@ static void mutate(struct test_point *pts, int size, struct m_image *src)
     		pts[i].col.x = src_pixel[0];
     		pts[i].col.y = src_pixel[1];
     		pts[i].col.z = src_pixel[2];
-    		m_color_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
+    		m_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
         }
         
         if (RANDF < p) {
@@ -245,7 +243,7 @@ static void gen(struct test_point *pts, struct m_image *src)
 		pts[i].col.x = src_pixel[0];
 		pts[i].col.y = src_pixel[1];
 		pts[i].col.z = src_pixel[2];
-		m_color_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
+		m_RGB_to_HSL(&pts[i].col.x, &pts[i].col.x);
 	} 
 }
 
@@ -309,7 +307,7 @@ static void render(struct m_image *dest, struct test_point *pts, int pts_count)
 		dest_data[0] = pts[i].col.x;
 		dest_data[1] = pts[i].col.y;
 		dest_data[2] = pts[i].col.z;
-		m_color_HSL_to_RGB(dest_data, dest_data);
+		m_HSL_to_RGB(dest_data, dest_data);
 	}
 
 	m_image_voronoi_transform(&tmp_buffer, &tmpi, &tmp_buffer);
@@ -325,7 +323,7 @@ static void init(void)
         exit(EXIT_FAILURE);
    
     m_image_ubyte_to_float(&src_image, &ubi);
-    m_color_sRGB_to_linear((float*)src_image.data, (float*)src_image.data, src_image.size);
+    m_sRGB_to_linear((float*)src_image.data, (float*)src_image.data, src_image.size);
     
     m_image_copy(&ubi, &src_image);
     m_image_resize(&src_image, &ubi, 128, 128);
