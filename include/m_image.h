@@ -2672,13 +2672,18 @@ MIAPI void m_image_resize(struct m_image *dest, const struct m_image *src, int n
    float ry = (float)height / (float)new_height;
 
    assert(src->size > 0 && src->type == M_FLOAT);
-   m_image_create(dest, M_FLOAT, new_width, new_height, comp);
 
    if (rx > 1.0f || ry > 1.0f) {
       m_image_gaussian_blur(&tmp, src, M_MAX(0.0f, rx - 1.0f), M_MAX(0.0f, ry - 1.0f));
+      m_image_create(dest, M_FLOAT, new_width, new_height, comp);
       m__bilinear(dest, &tmp, rx, ry, -0.5f);
    }
    else {
+      if (dest == src) {
+         m_image_copy(&tmp, src);
+         src = &tmp;
+      }
+      m_image_create(dest, M_FLOAT, new_width, new_height, comp);
       m__bilinear(dest, src, rx, ry, -0.5f);
    }
 
