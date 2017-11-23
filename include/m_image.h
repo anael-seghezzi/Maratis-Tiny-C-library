@@ -100,6 +100,9 @@ struct m_image
 /* identity, must be used before calling m_image_create */
 #define M_IMAGE_IDENTITY() {0, 0, 0, 0, 0, 0}
 
+/* m_image type util */
+MIAPI int m_type_sizeof(char type);
+
 /* fully supported types are: M_UBYTE, M_USHORT, M_HALF, M_FLOAT
    partially supported types: M_BYTE, M_SHORT, M_INT, M_UINT (no support for conversion) */
 MIAPI void m_image_create(struct m_image *image, char type, int width, int height, int comp);
@@ -1102,6 +1105,35 @@ MIAPI uint16_t m_float2half(float flt)
    return (uint16_t) ((uint32_t) m__base[j] + ((n & 0x007fffff) >> m__shift[j]));
 }
 
+MIAPI int m_type_sizeof(char type)
+{
+   switch (type) {
+   case M_BYTE:
+   case M_UBYTE:
+      return sizeof(uint8_t);
+      break;
+   case M_SHORT:
+   case M_USHORT:
+   case M_HALF:
+      return sizeof(uint16_t);
+      break;
+   case M_BOOL:
+   case M_INT:
+   case M_UINT:
+      return sizeof(uint32_t);
+      break;
+   case M_FLOAT:
+      return sizeof(float);
+      break;
+   case M_DOUBLE:
+      return sizeof(double);
+      break;
+   default:
+      assert(0);
+      return 0;
+   }
+}
+
 MIAPI void m_image_create(struct m_image *image, char type, int width, int height, int comp)
 {
    int size = width * height * comp;
@@ -1113,28 +1145,7 @@ MIAPI void m_image_create(struct m_image *image, char type, int width, int heigh
 
    M_SAFE_FREE(image->data);
 
-   switch (type) {
-   case M_BYTE:
-   case M_UBYTE:
-      image->data = malloc(size * sizeof(uint8_t));
-      break;
-   case M_SHORT:
-   case M_USHORT:
-   case M_HALF:
-      image->data = malloc(size * sizeof(uint16_t));
-      break;
-   case M_INT:
-   case M_UINT:
-      image->data = malloc(size * sizeof(uint32_t));
-      break;
-   case M_FLOAT:
-      image->data = malloc(size * sizeof(float));
-      break;
-   default:
-      assert(0);
-      return;
-   }
-
+   image->data = malloc(size * m_type_sizeof(type));
    image->type = type;
    image->width = width;
    image->height = height;
@@ -1814,11 +1825,9 @@ MIAPI void m_image_sRGB_to_linear(struct m_image *dest, const struct m_image *sr
    dest_p = (float *)dest->data;
    src_p = (float *)src->data;
 
-   for (i = 0; i < src->size; i+=src->comp) {
-      m_sRGB_to_linear(dest_p, src_p, c);
-      dest_p += src->comp;
-      src_p += src->comp;
-   }
+   #pragma omp parallel for schedule(dynamic, 8)
+   for (i = 0; i < src->size; i+=src->comp)
+      m_sRGB_to_linear(dest_p+i, src_p+i, c);
 }
 
 MIAPI void m_image_linear_to_sRGB(struct m_image *dest, const struct m_image *src)
@@ -1832,11 +1841,9 @@ MIAPI void m_image_linear_to_sRGB(struct m_image *dest, const struct m_image *sr
    dest_p = (float *)dest->data;
    src_p = (float *)src->data;
 
-   for (i = 0; i < src->size; i+=src->comp) {
-      m_linear_to_sRGB(dest_p, src_p, c);
-      dest_p += src->comp;
-      src_p += src->comp;
-   }
+   #pragma omp parallel for schedule(dynamic, 8)
+   for (i = 0; i < src->size; i+=src->comp)
+      m_linear_to_sRGB(dest_p+i, src_p+i, c);
 }
 
 MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src)
