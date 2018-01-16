@@ -1817,7 +1817,7 @@ MIAPI void m_image_unpremultiply(struct m_image *dest, const struct m_image *src
 MIAPI void m_image_sRGB_to_linear(struct m_image *dest, const struct m_image *src)
 {
    float *dest_p, *src_p;
-   int i, c = M_MIN(src->comp, 3);
+   int i, c, comp3 = M_MIN(src->comp, 3);
 
    assert(src->size > 0 && src->type == M_FLOAT);
 
@@ -1825,15 +1825,26 @@ MIAPI void m_image_sRGB_to_linear(struct m_image *dest, const struct m_image *sr
    dest_p = (float *)dest->data;
    src_p = (float *)src->data;
 
-   #pragma omp parallel for schedule(dynamic, 8)
-   for (i = 0; i < src->size; i+=src->comp)
-      m_sRGB_to_linear(dest_p+i, src_p+i, c);
+   if (dest == src) {
+      #pragma omp parallel for schedule(dynamic, 8)
+      for (i = 0; i < src->size; i+=src->comp) {
+         m_sRGB_to_linear(dest_p+i, src_p+i, comp3);
+      }
+   }
+   else {
+      #pragma omp parallel for schedule(dynamic, 8)
+      for (i = 0; i < src->size; i+=src->comp) {
+         m_sRGB_to_linear(dest_p+i, src_p+i, comp3);
+         for (c = comp3; c < src->comp; c++)
+            dest_p[i+c] = src_p[i+c];
+      }
+   }
 }
 
 MIAPI void m_image_linear_to_sRGB(struct m_image *dest, const struct m_image *src)
 {
    float *dest_p, *src_p;
-   int i, c = M_MIN(src->comp, 3);
+   int i, c, comp3 = M_MIN(src->comp, 3);
 
    assert(src->size > 0 && src->type == M_FLOAT);
 
@@ -1841,9 +1852,20 @@ MIAPI void m_image_linear_to_sRGB(struct m_image *dest, const struct m_image *sr
    dest_p = (float *)dest->data;
    src_p = (float *)src->data;
 
-   #pragma omp parallel for schedule(dynamic, 8)
-   for (i = 0; i < src->size; i+=src->comp)
-      m_linear_to_sRGB(dest_p+i, src_p+i, c);
+   if (dest == src) {
+      #pragma omp parallel for schedule(dynamic, 8)
+      for (i = 0; i < src->size; i+=src->comp) {
+         m_linear_to_sRGB(dest_p+i, src_p+i, comp3);
+      }
+   }
+   else {
+      #pragma omp parallel for schedule(dynamic, 8)
+      for (i = 0; i < src->size; i+=src->comp) {
+         m_linear_to_sRGB(dest_p+i, src_p+i, comp3);
+         for (c = comp3; c < src->comp; c++)
+            dest_p[i+c] = src_p[i+c];
+      }
+   }
 }
 
 MIAPI void m_image_summed_area(struct m_image *dest, const struct m_image *src)
