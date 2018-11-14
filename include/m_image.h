@@ -470,10 +470,12 @@ MIAPI void m_gaussian_kernel(float *dest, int size, float radius)
 
 MIAPI void m_sst(float *dest, const float *src, int count)
 {
-   int i;
+   register int i;
+   register float dx;
+   register float dy;
    for (i = 0; i < count; i++) {
-      float dx = src[0];
-      float dy = src[1];
+      dx = src[0];
+      dy = src[1];
       dest[0] = dx*dx;
       dest[1] = dy*dy;
       dest[2] = dx*dy;
@@ -1147,6 +1149,8 @@ MIAPI void m_image_create(struct m_image *image, char type, int width, int heigh
    M_SAFE_FREE(image->data);
 
    image->data = malloc(size * m_type_sizeof(type));
+   if( !image->data ) 
+		printf("BAD ALLOC:m_image_create\n");
    image->type = type;
    image->width = width;
    image->height = height;
@@ -2091,6 +2095,7 @@ MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src
 
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy)
 {
+	
    struct m_image tmp = M_IMAGE_IDENTITY();
    float *kernelx = NULL, *kernely = NULL;
    int kernelx_size = (int)(dx / 0.65f + 0.5f) * 2 + 1;
@@ -2101,7 +2106,8 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* exit */
    if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
       if (dest != src) m_image_copy(dest, src);
-      return;
+
+	  return;
    }
 
    /* x blur */
@@ -2218,33 +2224,33 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src)
    struct m_image copy = M_IMAGE_IDENTITY();
    float ky[9] = {-1, -2, -1, 0, 0, 0, 1, 2, 1};
    float kx[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-   float *src_pixel;
-   float *dest_pixel;
    int width = src->width;
    int height = src->height;
    int w2 = width + 2;
-   int x, y;
-
+   int y;
+   
    assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
 
    /* create source and destination images */
    m_image_reframe(&copy, src, 1, 1, 1, 1); /* apply clamped margin */
    m_image_create(dest, M_FLOAT, width, height, 2);
-
-   src_pixel = (float *)copy.data;
-   dest_pixel = (float *)dest->data;
-
+   
+   #pragma omp parallel for schedule(dynamic, 8)
    for (y = 0; y < height; y++) {
+	  float * src_pixel = (float*)copy.data + y * w2;
+	  float * dest_pixel = (float*)dest->data + y * width * 2;
+	  int x;
       for (x = 0; x < width; x++) {
          dest_pixel[0] = m__convolve_pixel(src_pixel, w2, kx);
          dest_pixel[1] = m__convolve_pixel(src_pixel, w2, ky);
          src_pixel++;
          dest_pixel += 2;
       }
-      src_pixel += 2;
+	  src_pixel+=2;
    }
 
    m_image_destroy(&copy);
+  
 }
 
 MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius)
