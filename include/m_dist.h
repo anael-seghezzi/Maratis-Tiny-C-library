@@ -149,7 +149,7 @@ void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count)
 
 void m_dist_transform_2d(float *dest, float *src, int width, int height)
 {
-	prof_begin("m_dist_transform_2d");
+	
    float *tmp1 = (float *)malloc(M_MAX(width, height) * sizeof(float));
    float *tmp2 = (float *)malloc(M_MAX(width, height) * sizeof(float));
    int x, y;
@@ -176,7 +176,7 @@ void m_dist_transform_2d(float *dest, float *src, int width, int height)
 
    free(tmp2);
    free(tmp1);
-   prof_end("m_dist_transform_2d");
+   
 }
 
 void m_voronoi_transform_2d(float *destd, int *desti, float *src, int width, int height)
