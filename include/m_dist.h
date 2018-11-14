@@ -97,7 +97,7 @@ k = 0;\
 for (q = 1; q < count; q++) {\
    float s;\
    while (1) {\
-      s = ((src[q] + q * q) - (src[v[k]] + v[k] * v[k])) / (float)(2 * q - 2 * v[k]);\
+      s = (((double)src[q] + q * q) - ((double)src[v[k]] + v[k] * v[k])) / (double)(2 * q - 2 * v[k]);\
       if (s > z[k])\
          break;\
       k--;\
