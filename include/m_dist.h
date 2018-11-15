@@ -128,7 +128,6 @@ void m_dist_transform_1d(float *dest, float *src, int count)
 
 void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count)
 {
-	//prof_begin("m_voronoi_transform_1d");
    int *v = (int *)malloc(count * sizeof(int));
    float *z = (float *)malloc((count + 1) * sizeof(float));
    int q, k;
@@ -144,7 +143,6 @@ void m_voronoi_transform_1d(float *destd, int *desti, float *src, int count)
 
    free(z);
    free(v);
-  // prof_end("m_voronoi_transform_1d");
 }
 
 void m_dist_transform_2d(float *dest, float *src, int width, int height)
@@ -276,7 +274,6 @@ void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, con
    int size = src->size;
    int i;
 
-   //prof_begin("m_image_voronoi_transform");
    assert(src->size > 0 && src->type == M_FLOAT && src->comp == 1);
    m_image_create(destd, M_FLOAT, width, height, 1);
    m_image_create(desti, M_INT, width, height, 1);
@@ -287,8 +284,6 @@ void m_image_voronoi_transform(struct m_image *destd, struct m_image *desti, con
 
    for (i = 0; i < size; i++)
       dest_data[i] = sqrtf(dest_data[i]);
-
-   //prof_end("m_image_voronoi_transform");
 }
 
 void m_image_voronoi_fill(struct m_image *dest, const struct m_image *src, const struct m_image *srci)

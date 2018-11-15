@@ -592,14 +592,13 @@ MIAPI float m_mean(const float *src, int size)
    return size > 0 ? mean / (float)size : 0;
 }
 
-
 MIAPI float m_squared_distance_omp(const float *src1, const float *src2, int size)
 {
    register float score = 0; 
    register int i;
    register float x;
 
-	#pragma omp parallel for schedule(dynamic, 4096) reduction(+:score) 
+   #pragma omp parallel for schedule(dynamic, 4096) reduction(+:score) 
    for (i = 0; i < size; i++) {
       x = src2[i] - src1[i];
       score += x * x;
@@ -621,14 +620,14 @@ MIAPI float m_squared_distance(const float *src1, const float *src2, int size)
    return score;
 }
 
-
-MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size){
-	if( size >= 4096*4 ){
-		return m_squared_distance_omp(src1,src2,size);
-	}
-	else {
-		return m_squared_distance(src1,src2,size);
-	}
+MIAPI float m_squared_distance_dispatch(const float *src1, const float *src2, int size)
+{
+   if (size >= 4096*4) {
+      return m_squared_distance_omp(src1,src2,size);
+   }
+   else {
+      return m_squared_distance(src1,src2,size);
+   }
 }
 
 /* m_half2float / m_float2half :
@@ -2125,7 +2124,6 @@ MIAPI void m_image_convolution_v(struct m_image *dest, const struct m_image *src
 
 MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src, float dx, float dy)
 {
-	
    struct m_image tmp = M_IMAGE_IDENTITY();
    float *kernelx = NULL, *kernely = NULL;
    int kernelx_size = (int)(dx / 0.65f + 0.5f) * 2 + 1;
@@ -2136,7 +2134,6 @@ MIAPI void m_image_gaussian_blur(struct m_image *dest, const struct m_image *src
    /* exit */
    if (dx < FLT_EPSILON && dy < FLT_EPSILON) {
       if (dest != src) m_image_copy(dest, src);
-
 	  return;
    }
 
@@ -2276,11 +2273,9 @@ MIAPI void m_image_sobel(struct m_image *dest, const struct m_image *src)
          src_pixel++;
          dest_pixel += 2;
       }
-	  src_pixel+=2;
    }
 
    m_image_destroy(&copy);
-  
 }
 
 MIAPI void m_image_harris(struct m_image *dest, const struct m_image *src, float radius)
