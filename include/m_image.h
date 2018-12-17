@@ -507,17 +507,19 @@ MIAPI void m_tfm(float *dest, const float *src, int count)
          float dx2 = src[0];
          float dy2 = src[1];
          float dxy = src[2];
-         float l = 0.5f * (dx2 + dy2 + sqrtf((dy2 - dx2) * (dy2 - dx2) + 4.0f * dxy * dxy));
-         dest[0] = dx2 - l;
+         float sqd = (dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy);
+         float lambda = 0.5f * (dy2 + dx2 + sqrtf(M_MAX(0, sqd)));
+         dest[0] = dx2 - lambda;
          dest[1] = dxy;
       }
       else {
          float dy2 = src[0];
          float dx2 = src[1];
          float dxy = src[2];
-         float l = 0.5f * (dx2 + dy2 + sqrtf((dy2 - dx2) * (dy2 - dx2) + 4.0f * dxy * dxy));
+         float sqd = (dy2 * dy2) - (2.0f * dx2 * dy2) + (dx2 * dx2) + (4.0f * dxy * dxy);
+         float lambda = 0.5f * (dy2 + dx2 + sqrtf(M_MAX(0, sqd)));
          dest[0] = dxy;
-         dest[1] = dx2 - l;
+         dest[1] = dx2 - lambda;
       }
 
       src += 3;
