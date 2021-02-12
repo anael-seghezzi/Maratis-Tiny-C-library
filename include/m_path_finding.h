@@ -108,10 +108,10 @@ MPFAPI int m_pf_backtrace(struct m_pf_point *dest, const unsigned int *map, int 
 
    for (i = 0; i < s; i++) {
 
+      unsigned int min = UINT_MAX;
       int minx, miny;
       int maxx, maxy;
       int xi, yi;
-      int min = UINT_MAX;
 
       minx = (x - 1) < 0 ? 0 : (x - 1);
       miny = (y - 1) < 0 ? 0 : (y - 1);
