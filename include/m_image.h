@@ -1343,7 +1343,7 @@ MIAPI void m_image_float_to_ubyte(struct m_image *dest, const struct m_image *sr
       src_data = (float *)src->data;
       dest_data = (uint8_t *)dest->data;
       for (i = 0; i < src->size; i++) {
-         int x = (int)(src_data[i] * 255);
+         int x = (int)(src_data[i] * 255.0f + 0.5f);
          dest_data[i] = (uint8_t)M_CLAMP(x, 0, 255);
       }
    }
