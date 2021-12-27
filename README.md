@@ -59,9 +59,9 @@ Asm.js demos
 Games / Demos
 -------------
 
-* Back on Earth - Ludum Dare 34 Compo (with source)
+* Back on Earth - Ludum Dare 34 Compo
 
- [![BackOnEarth](http://maratis3d.com/download/ludum34/scm.png)](http://ludumdare.com/compo/ludum-dare-34/?action=preview&uid=45582)
+ [![BackOnEarth](http://maratis3d.com/download/ludum34/scm.png)](http://maratis3d.com/download/ludum34/b/web_player.html)
 
 
 Building the demos (CMake)
